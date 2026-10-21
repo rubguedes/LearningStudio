@@ -1,9 +1,11 @@
 # AGENTS.md — Regras permanentes do LearningStudio
 
 ## Objetivo e escopo
+
 Você é o agente de implementação do LearningStudio, um aplicativo pessoal **somente desktop Windows**. Siga `PROMPT.md` como especificação funcional. Entregue software executável, não apenas protótipos ou telas estáticas.
 
 ## Autonomia e prioridades
+
 - Trabalhe de forma autônoma, escolhendo soluções simples, seguras, estáveis e fáceis de manter.
 - Prioridade: funcionamento > integridade de dados > segurança > clareza da UX > desempenho > funcionalidades adicionais.
 - Implemente em EPICs pequenos, testáveis e em ordem de dependência. Não faça refatorações grandes sem necessidade.
@@ -11,6 +13,7 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Nunca alegue que executou testes, conectou serviços ou gerou instalador se isso não ocorreu.
 
 ## Arquitetura
+
 - Tauri 2, React, TypeScript, Vite, Rust e SQLite.
 - Separar apresentação, estado, domínio, persistência e integrações externas.
 - Comandos Tauri com contratos tipados, validação de entradas e tratamento explícito de erros.
@@ -20,6 +23,7 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Preferir dependências maduras e ativamente mantidas; justificar as não essenciais.
 
 ## Qualidade
+
 - TypeScript estrito; evitar `any` e abstrações desnecessárias.
 - Componentes pequenos, acessíveis e reutilizáveis. Estados de loading, vazio e erro são obrigatórios nos fluxos relevantes.
 - Testar regras de progresso, recorrência, validação, persistência, autenticação e prevenção de duplicatas.
@@ -29,6 +33,7 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Não gerar arquivos de documentação extras sem necessidade: os documentos de instrução do projeto são `PROMPT.md` e `AGENTS.md`. Arquivos de código, configuração, testes, migrações, assets e empacotamento são permitidos.
 
 ## Segurança
+
 - Senha local armazenada como hash forte com salt; nunca registrar senhas, tokens ou chaves.
 - Usar cofre de credenciais do Windows para tokens OAuth e segredos de API.
 - Solicitar escopos OAuth mínimos e consentimento antes de enviar e-mails, criar eventos ou transmitir redações à IA.
@@ -38,24 +43,28 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Validar dados importados e tratar texto externo e respostas de IA como conteúdo não confiável.
 
 ## Comportamento offline
+
 - Estudos, tarefas, metas, roadmaps, lições offline e histórico devem funcionar sem internet.
 - Sincronização Google e IA devem falhar de modo controlado, sem bloquear a interface ou perder alterações locais.
 - Filas de sincronização devem ser idempotentes e oferecer estado visível ao usuário.
 - Não prometer notificações ou envio de e-mails com o computador desligado.
 
 ## Interface
+
 - Idioma inicial: português do Brasil; conteúdo das lições pode ser em inglês.
 - Design claro, minimalista, consistente e profissional, com navegação lateral e dashboard compacto.
 - Atalhos de teclado úteis, foco visível, contraste adequado, mensagens diretas e confirmações para ações destrutivas.
 - Evitar animações pesadas, gráficos decorativos e excesso de telas ou configurações.
 
 ## Integrações
+
 - Google: OAuth para apps instalados com fluxo suportado, tokens seguros, escopos mínimos e logs sem informações sensíveis.
 - ChatGPT: apenas importação/cadastro manual até existir API oficial documentada para a funcionalidade; não fingir sincronização.
 - IA: integração opcional, isolada atrás de interface de provedor; funcionamento principal independe dela.
 - Não inventar preços, limites, endpoints ou capacidades de provedores externos.
 
 ## Tutores, execução de código e custo de IA
+
 - Implementar geradores e avaliadores de inglês e Python/TypeScript com contratos tipados, rubricas verificáveis e histórico de tentativas. Guardar resposta original, feedback e versões separadamente; não sobrescrever trabalho do estudante.
 - Não confiar em avaliações de IA como prova de execução ou correção funcional: testes determinísticos têm precedência. Distinguir observação comprovada, sugestão e incerteza.
 - **Nunca executar código submetido dentro do processo do aplicativo ou sem isolamento comprovado.** Exigir limites de tempo, CPU, memória, rede, arquivos e permissões; desabilitar o botão de execução quando não houver sandbox seguro. Não instalar Docker como requisito de uso.
@@ -66,11 +75,13 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 ## Tela de Trilhas — requisitos obrigatórios
 
 ### Design e navegação
+
 - Inspirar-se na experiência de progressão do Duolingo: percurso visual, checkpoints, estados bloqueado/disponível/concluído, feedback imediato e sensação clara de evolução. Não copiar marca, mascote, ilustrações, textos ou identidade visual proprietária.
 - Manter duas áreas distintas: **Trilha de Idiomas** e **Trilha de Carreira**. Exibir progresso real, próxima ação recomendada e critérios objetivos para concluir cada etapa.
 - Garantir acessibilidade por teclado, contraste, leitura confortável e navegação eficiente no desktop. Evitar gamificação que distorça a avaliação de aprendizado.
 
 ### Trilha de Idiomas
+
 - A tela inicial permite escolher o idioma; a estrutura deve aceitar novos idiomas sem exigir mudanças profundas no código.
 - Para cada idioma, oferecer configuração de nível atual e nível-alvo (preferencialmente CEFR quando aplicável), prazo desejado, minutos disponíveis por dia e disponibilidade semanal.
 - Disponibilizar ação explícita **“Sugerir plano com IA”**. A IA deve produzir proposta editável com etapas, carga horária, revisões, marcos e premissas; validar a viabilidade do prazo e nunca prometer fluência.
@@ -82,6 +93,7 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Para inglês, manter leitura, interpretação, redação, vocabulário e correção explicada, com progressão adaptativa e histórico de versões.
 
 ### Trilha de Carreira
+
 - Exibir uma síntese objetiva de competências pedidas em vagas relevantes de IA, ordenadas por importância **calculada a partir de fontes e critérios explícitos**: frequência nas vagas analisadas, relevância para o cargo-alvo, atualidade e lacunas do estudante. Mostrar amostra, período, região e data da atualização; não apresentar ranking subjetivo como estatística de mercado.
 - Oferecer campo **“Sugerir tema”** para o estudante propor assuntos; a IA encaixa a sugestão no roadmap, explicando pré-requisitos e prioridades, sem substituir automaticamente o plano.
 - Cada tópico deve incluir: resumo teórico conciso, conceitos-chave, exemplos executáveis ou verificáveis, explicação dos exemplos e um desafio curto e prático. Sempre que apropriado, orientar um artefato publicável no GitHub para evolução do portfólio, com README e critérios de aceite.
@@ -93,6 +105,7 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Atualizações periódicas de currículo/vagas só devem ocorrer quando a aplicação estiver em execução ou por mecanismo de agendamento explicitamente configurado e autorizado; não prometer execução com o computador desligado.
 
 ### Regras transversais e aceite
+
 - Persistir configurações, trilhas, versões de lições, erros, revisões, projetos, fontes, currículo e avaliações no SQLite com migrações e integridade referencial.
 - Permitir uso offline de materiais já gerados e progresso; deixar visíveis operações que dependem de internet, APIs, OCR, Google ou GitHub.
 - Pedir consentimento antes de transmitir currículos, redações, PDFs anotados ou código a provedores externos; minimizar dados enviados e respeitar limites de custo de IA.
@@ -100,6 +113,7 @@ Você é o agente de implementação do LearningStudio, um aplicativo pessoal **
 - Tratar este capítulo como ampliação dos requisitos de `PROMPT.md` para a tela de Trilhas. Em caso de divergência específica sobre esta tela, aplicar estas regras sem descartar as demais funcionalidades do projeto.
 
 ## Entrega e comunicação
+
 - Ao finalizar cada EPIC, resumir arquivos principais alterados, funcionalidades, comandos de teste e resultados, riscos e próximo passo.
 - Manter instruções de execução e empacotamento claras em `PROMPT.md` ou comentários/configurações apropriadas, sem multiplicar documentos de orientação.
 - O alvo final é instalador Windows `.exe`. Se o ambiente não suportar build Windows, preparar pipeline reproduzível e declarar a limitação.

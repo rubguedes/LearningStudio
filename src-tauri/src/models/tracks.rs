@@ -136,8 +136,13 @@ pub struct PdfReview {
     deny_unknown_fields
 )]
 pub enum TracksAction {
-    ExportPdf { id:String },
-    SaveCareerPreferences { target_role:String, region:String },
+    ExportPdf {
+        id: String,
+    },
+    SaveCareerPreferences {
+        target_role: String,
+        region: String,
+    },
     GenerateLanguageLesson {
         profile_id: String,
         topic: String,

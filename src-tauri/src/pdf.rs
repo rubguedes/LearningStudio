@@ -108,7 +108,7 @@ pub fn lesson(lesson: &EnglishLesson) -> Vec<u8> {
             lines.extend(wrap(&format!("{}. {}", n + 1, c)));
         }
         lines.extend([
-            format!("Resposta Q{}: ____________________________________",i+1),
+            format!("Resposta Q{}: ____________________________________", i + 1),
             String::new(),
             String::new(),
         ]);

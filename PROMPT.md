@@ -1,9 +1,11 @@
 # LearningStudio — Prompt de implementação para Codex
 
 ## Missão
+
 Implemente do zero o **LearningStudio**, um aplicativo **desktop exclusivo para Windows**, de uso pessoal, que centraliza estudos, trilhas de carreira em IA, inglês, metas, lições, tarefas e lembretes. Execute a implementação autonomamente, em etapas pequenas e verificáveis, até produzir um instalador `.exe` utilizável. Consulte `AGENTS.md` antes de cada etapa.
 
 ## Resultado obrigatório
+
 - Aplicativo desktop real, sem aba de navegador e sem necessidade de iniciar Docker, servidor ou banco manualmente.
 - Instalador Windows `.exe`, processo de build documentado e testes executados. Se o ambiente não for Windows ou não tiver toolchain de empacotamento, não declare que o instalador foi produzido: deixe o pipeline pronto e indique como gerá-lo em Windows.
 - Interface moderna, minimalista, clara por padrão, responsiva ao redimensionamento, com navegação lateral e visão geral compacta.
@@ -13,6 +15,7 @@ Implemente do zero o **LearningStudio**, um aplicativo **desktop exclusivo para 
 - Integração de IA opcional e configurável, sem impedir uso sem chave de API.
 
 ## Stack escolhida
+
 - Tauri 2 + React + TypeScript + Vite para aplicativo e interface.
 - Rust para comandos nativos, persistência e integrações sensíveis; SQLite com migrações versionadas.
 - UI com componentes acessíveis e estilos consistentes; escolha biblioteca pequena e estável, evitando dependências supérfluas.
@@ -20,22 +23,28 @@ Implemente do zero o **LearningStudio**, um aplicativo **desktop exclusivo para 
 - Testes unitários para regras de domínio, testes de componentes e testes de integração nos fluxos críticos.
 
 ## Experiência do usuário
+
 ### Painel inicial
+
 Mostrar resumo de hoje, próxima sessão, tarefas vencidas, sequência de estudo (streak), tempo estudado na semana, metas ativas e progresso por trilha. Atalhos para iniciar sessão, criar tarefa e abrir lição de inglês. Evitar excesso de gráficos ou telas fragmentadas.
 
 ### Organização de estudos
+
 - Áreas de estudo, matérias, tópicos, recursos (links e notas), sessões cronometradas e histórico.
 - Tarefas com prioridade, status, estimativa de duração, prazo, recorrência e vínculo com trilha/checkpoint.
 - Agenda interna semanal/mensal, com tarefas e sessões; funciona offline.
 - Pesquisa, filtros, edição, arquivamento e exclusão com confirmação.
 
 ### Metas e progresso
+
 - Metas com prazo, unidade de medida e alvo mensurável; progresso manual ou calculado a partir de atividades.
 - Checkpoints com critérios explícitos de conclusão e evidências (notas, links ou projetos).
 - Relatórios de estudo semanais: horas, tarefas concluídas, metas e consistência. Não inventar progresso a partir de mera abertura de páginas.
 
 ### Roadmap inicial de carreira em IA
+
 Criar trilha editável e não prescritiva, com etapas e checkpoints:
+
 1. Fundamentos de Python, Git, SQL, APIs e testes.
 2. Engenharia de software: FastAPI, arquitetura, autenticação, Docker, CI e observabilidade.
 3. Fundamentos de dados e ML: estatística, NumPy/Pandas, scikit-learn, avaliação de modelos.
@@ -43,13 +52,16 @@ Criar trilha editável e não prescritiva, com etapas e checkpoints:
 5. Engenharia de produção: deploy, monitoramento, versionamento, privacidade e otimização.
 6. Portfólio e empregabilidade: projetos demonstráveis, documentação, entrevistas e inglês técnico.
 7. Evolução para arquitetura de soluções de IA: requisitos, trade-offs, integrações, escalabilidade, governança e desenho de sistemas.
-Cada checkpoint deve ter descrição, atividade prática, critérios de aceite e opção de marcar como concluído com evidência. O usuário pode reorganizar, remover ou acrescentar itens.
+   Cada checkpoint deve ter descrição, atividade prática, critérios de aceite e opção de marcar como concluído com evidência. O usuário pode reorganizar, remover ou acrescentar itens.
 
 ### Roadmap inicial de inglês
+
 Trilha editável de **B1/B2 rumo a C1**, sem afirmar que o nível foi medido. Checkpoints de leitura, escrita, vocabulário, gramática, listening e speaking. Permitir registrar dificuldades recorrentes e revisões espaçadas.
 
 ### Lições de inglês
+
 Criar um gerador de lições com estrutura consistente, inclusive offline por meio de lições pré-instaladas:
+
 1. Tema e objetivos, nível estimado B1–B2 e tempo previsto.
 2. Texto original de leitura de extensão moderada.
 3. Perguntas de compreensão.
@@ -58,10 +70,11 @@ Criar um gerador de lições com estrutura consistente, inclusive offline por me
 6. Correção e feedback: erros gramaticais, vocabulário, naturalidade, versão revisada, explicação concisa e um desafio de continuação.
 7. Vocabulário útil com exemplos e opção de salvar para revisão.
 8. Histórico e evolução por habilidade.
-Sem IA: apresentar gabaritos/comentários pré-definidos quando houver, e permitir autocorreção e registro manual. Com IA: solicitar feedback estruturado, tratar a resposta como conteúdo não confiável, evitar inventar correções e preservar a versão original. Não copiar automaticamente conteúdo de tarefas do ChatGPT.
-Adicionar modelo recorrente de prática de escrita às segundas, quartas e sextas, às 15h, **desativado até o usuário confirmar o agendamento**. Permitir personalizar dias, horários e fuso.
+   Sem IA: apresentar gabaritos/comentários pré-definidos quando houver, e permitir autocorreção e registro manual. Com IA: solicitar feedback estruturado, tratar a resposta como conteúdo não confiável, evitar inventar correções e preservar a versão original. Não copiar automaticamente conteúdo de tarefas do ChatGPT.
+   Adicionar modelo recorrente de prática de escrita às segundas, quartas e sextas, às 15h, **desativado até o usuário confirmar o agendamento**. Permitir personalizar dias, horários e fuso.
 
 ### Lembretes e Google
+
 - Google Calendar: conectar conta via OAuth 2.0 com fluxo seguro para aplicativo instalado, escopos mínimos, criar/atualizar/remover **somente eventos criados pelo LearningStudio** e guardar IDs para evitar duplicação. Nunca alterar outros eventos sem autorização específica.
 - Gmail: permitir lembretes por e-mail para o próprio endereço autorizado. Preferir API oficial e escopo mínimo. Exibir prévia, exigir ativação explícita e oferecer teste de envio. Implementar fila local com tentativas controladas, idempotência e log de falhas.
 - Sem conexão: manter tarefas e lembretes pendentes localmente e sincronizar quando possível. Informar claramente que envios e sincronizações não ocorrem offline.
@@ -69,7 +82,9 @@ Adicionar modelo recorrente de prática de escrita às segundas, quartas e sexta
 - Não solicitar senha do Google; usar navegador do sistema para consentimento.
 
 ### Tarefas agendadas no ChatGPT
+
 **Não presumir API pública disponível para listar ou sincronizar tarefas do ChatGPT.**
+
 - Criar uma área “Tarefas do ChatGPT” para cadastrar/importar manualmente título, instruções, recorrência, horário, links e observações, com marcação explícita de origem e data de última atualização.
 - Aceitar colagem de texto e importação de JSON/CSV em formato documentado e validado; nunca afirmar sincronização automática inexistente.
 - Permitir converter tarefas importadas em tarefas ou sessões locais, mantendo referência à origem e evitando duplicatas.
@@ -77,6 +92,7 @@ Adicionar modelo recorrente de prática de escrita às segundas, quartas e sexta
 - Não usar scraping, cookies de sessão, endpoints privados ou automação não autorizada para extrair tarefas do ChatGPT.
 
 ### Tutores inteligentes de inglês e programação
+
 - Implementar dois tutores separados, com histórico, rubricas, revisão e dificuldade adaptativa; IA opcional via API remota ou Ollama local, com modo offline sem modelo (exercícios pré-carregados e avaliação limitada por gabaritos/testes).
 - **Inglês:** gerar lições originais com tema, nível CEFR estimado, objetivos, texto de leitura, questões de compreensão, proposta de redação, vocabulário contextualizado e desafio de continuação. Corrigir respostas com trechos originais, sugestões, explicações concisas em português, erros de gramática, naturalidade, vocabulário e coerência; destacar alternativas válidas, evitar marcar variações corretas como erro e não apresentar nível CEFR como certificação. Salvar versões originais e corrigidas, tentativas, erros recorrentes e itens para revisão espaçada. Permitir gerar nova lição com base nas dificuldades anteriores.
 - **Programação:** oferecer trilhas de Python (principal) e TypeScript (secundária), do básico até algoritmos, testes, APIs, automação, integração com modelos, agentes e sistemas de IA. Gerar enunciado, exemplos de entrada/saída, restrições, dicas graduais, testes visíveis e ocultos, critérios de aceite e solução de referência guardada fora da resposta inicial. Editor de código com destaque de sintaxe, salvar rascunhos e múltiplas submissões.
@@ -85,12 +101,14 @@ Adicionar modelo recorrente de prática de escrita às segundas, quartas e sexta
 - Saídas de IA devem usar esquemas tipados validados, com fallback para respostas inválidas, limites de tamanho, tentativas controladas e indicação de incerteza. Proteger contra prompt injection contida em textos e códigos submetidos.
 
 ### IA opcional
+
 - Configuração de provedores: OpenAI API (chave própria e cobrança separada do ChatGPT Plus) e Ollama local (sem cobrança por token de API, sujeito a hardware e instalação local). Abstrair ambos em interface tipada; selecionar provedor/modelo por tarefa e permitir desativar IA.
 - Utilizar IA para gerar/corrigir lições de inglês, gerar desafios de Python/TypeScript, revisar soluções e sugerir revisões e checkpoints. Não exigir IA para tarefas básicas de organização.
 - Exibir consumo de tokens de entrada/saída e custos estimados por tarefa, dia e mês quando o provedor retornar uso e houver tabela de preços configurada e atualizada pelo usuário. Nunca fixar preços de modelos como verdade permanente. Configurar teto mensal em moeda do provedor, aviso por limiar, confirmação antes de chamadas potencialmente caras e bloqueio de novas chamadas remotas ao atingir o teto; considerar estimativas imperfeitas e custos de chamadas em andamento. Ollama não possui cobrança por token de API, mas usa recursos locais.
 - Sem chave, todo o restante do app continua funcional.
 
 ### Segurança e privacidade
+
 - Primeira execução: definir senha local; armazenar apenas hash forte com salt (Argon2id ou equivalente comprovado), nunca senha em texto puro.
 - Proteger tokens OAuth e chaves de API no cofre do Windows; bloquear acesso à interface antes de autenticação.
 - Evitar logs com dados sensíveis, validar entradas, proteger comandos Tauri e limitar permissões nativas.
@@ -98,9 +116,11 @@ Adicionar modelo recorrente de prática de escrita às segundas, quartas e sexta
 - Dados pessoais ficam locais, exceto o que for enviado intencionalmente ao Google ou provedor de IA.
 
 ## Modelo de dados mínimo
+
 Entidades para `StudyArea`, `Topic`, `Resource`, `StudySession`, `Task`, `Recurrence`, `Goal`, `Roadmap`, `Checkpoint`, `CheckpointEvidence`, `EnglishLesson`, `EnglishSubmission`, `VocabularyItem`, `CodingChallenge`, `CodeSubmission`, `CodeTestCase`, `EvaluationResult`, `LearningReview`, `AIUsageRecord`, `Reminder`, `SyncRecord`, `ImportedChatGPTTask`, `AppSettings` e migrações. Use IDs estáveis, timestamps e integridade referencial. Não criar tabelas inúteis.
 
 ## Ordem de execução (EPICs)
+
 **EPIC 1 — Base funcional:** bootstrap Tauri/React/SQLite, migrações, onboarding/senha, layout, CRUD de áreas/tarefas, testes e execução local.
 
 **EPIC 2 — Estudos e progresso:** sessões, metas, checkpoints, dashboard e relatórios básicos.
@@ -114,6 +134,7 @@ Entidades para `StudyArea`, `Topic`, `Resource`, `StudySession`, `Task`, `Recurr
 **EPIC 6 — Tutores e entrega:** provedores OpenAI/Ollama, geração e correção de inglês, desafios Python/TypeScript, avaliação estática e testes de código somente com isolamento comprovado, revisão adaptativa, controle de tokens/custos, polimento UX, testes end-to-end, backup e empacotamento Windows. Implementar por fatias verificáveis, sem comprometer a entrega do aplicativo base.
 
 ## Forma de trabalho do Codex
+
 1. Inspecione o repositório e leia `AGENTS.md`.
 2. Faça um plano curto do EPIC atual, implemente e execute testes.
 3. Corrija erros encontrados antes de avançar.
@@ -123,6 +144,7 @@ Entidades para `StudyArea`, `Topic`, `Resource`, `StudySession`, `Task`, `Recurr
 7. Não declare conclusão sem validar os critérios de aceite.
 
 ## Critérios de aceite finais
+
 - Instala e abre no Windows por ícone; não exige Docker ou inicialização manual de serviços.
 - Bloqueia dados até autenticação; persistência após fechar e reabrir.
 - Usuário cria tarefas, registra estudo, acompanha metas e conclui checkpoints.
@@ -186,12 +208,12 @@ npm run tauri -- build --debug --no-bundle
 Resultados da rodada final: formatação, lint, tipos e Clippy aprovados; 56 testes Vitest em nove arquivos e 51 testes Rust aprovados; build de produção da interface aprovado; oito testes Playwright aprovados após as correções; executáveis Windows de desenvolvimento e produção gerados. A janela Tauri de desenvolvimento foi aberta e a tela de criação de senha foi inspecionada no Windows. Após instalar o pacote final, a versão instalada abriu na tela de bloqueio e reconheceu a senha já configurada pelo usuário. A senha pessoal não foi definida ou digitada pelo agente. CRUD, senha incorreta/bloqueio e persistência após reabrir são cobertos pelos testes do armazenamento Rust; os fluxos visuais completos usam IPC explicitamente simulado no Chromium e não equivalem a teste de todo o fluxo na janela nativa. O teste de migração atualiza um banco do EPIC 2 para o esquema 6, preservando hash e tarefa. O teste do cofre Windows criou, leu e removeu uma entrada temporária isolada.
 
 | Encerramento da etapa | Vitest | Rust | Playwright com IPC simulado |
-| --- | ---: | ---: | ---: |
-| EPIC 2 | 44 | 16 | 3 |
-| EPIC 3 | 48 | 23 | 4 |
-| EPIC 4 | 51 | 30 | 5 |
-| EPIC 5 | 53 | 36 | 6 |
-| EPIC 6, rodada atual | 56 | 51 | 8 |
+| --------------------- | -----: | ---: | --------------------------: |
+| EPIC 2                |     44 |   16 |                           3 |
+| EPIC 3                |     48 |   23 |                           4 |
+| EPIC 4                |     51 |   30 |                           5 |
+| EPIC 5                |     53 |   36 |                           6 |
+| EPIC 6, rodada atual  |     56 |   51 |                           8 |
 
 As 24 verificações Python/SQLite dos EPICs 1–2 passaram novamente na rodada final. A integração das migrações 003–006 e persistência é testada na suíte Rust atual. Não houve execução remota de CI. Playwright usa `vite preview` e requer build anterior. Neste computador foi usado o Chromium já disponível por `PLAYWRIGHT_CHROMIUM_EXECUTABLE`.
 
@@ -205,11 +227,11 @@ O CSV aceita cabeçalho exato `externalId,title,instructions,schedule,url,notes`
 
 Em **Integrações Google**, cadastrar um cliente OAuth do tipo Aplicativo para computador, habilitando Calendar API/Gmail API e a conta de teste no projeto pessoal quando necessário. Informar client_id/client_secret somente no aplicativo; não enviar pelo chat. Selecionar explicitamente Calendar e/ou Gmail e concluir o consentimento no navegador padrão. São usados `openid email`, `calendar.app.created` e/ou `gmail.send`. O retorno OAuth abre temporariamente uma porta de loopback por até cinco minutos e encerra ao concluir/cancelar; não é um backend de uso do aplicativo. Tokens ficam no cofre Windows. O calendário é separado; eventos precisam de ID/marcadores do aplicativo e ETag compatível para alteração. Criação de calendário sem confirmação exige recuperar o vínculo na tela, sem criar duplicatas automaticamente. Conflitos preservam a versão remota e são exibidos como falha para revisão. O processamento automático da fila é opcional, somente enquanto a tela estiver aberta/desbloqueada. Não há envio com o aplicativo fechado.
 
-Em **IA e consumo**, a configuração inicial é desativada. Escolher provedor/modelo; para OpenAI, guardar uma chave própria no cofre Windows, informar os preços do modelo, a moeda e o limite mensal. Não há preços/modelos fixados como verdade permanente. Preços para uso remoto precisam de revisão nos últimos 30 dias. A reserva considera dados, instruções, esquema e limite de saída; ela é estimativa conservadora, não limite de faturamento do provedor. Chamadas ambíguas mantêm a reserva, inclusive após reabrir; não há repetição automática. O limite inclui essas reservas e chamadas já em andamento são serializadas pelo núcleo. Moeda não pode mudar durante um mês com consumo remoto registrado.
+Em **IA e consumo**, a configuração inicial é desativada. Na versão 0.2.0, basta preencher **Chave para ativação rápida** e escolher **Guardar chave e ativar OpenAI**. O núcleo guarda a chave no cofre Windows e configura `gpt-5.4-mini-2026-03-17`, orçamento mensal de US$ 5 e até 8.192 tokens de saída. Preços padrão de texto: US$ 0,75 de entrada e US$ 4,50 de saída por milhão de tokens, conferidos em 21/10/2026 na [documentação oficial do modelo](https://developers.openai.com/api/docs/models/gpt-5.4-mini). Esse preset é datado, editável e sujeito à validade de 30 dias; não é uma promessa de preço permanente. O formulário avançado permite escolher outro modelo, preços, moeda e limite. **Verificar conexão e modelo** consulta apenas metadados, sem enviar redações, código ou currículo; não comprova saldo para geração. A reserva considera dados, instruções, esquema e limite de saída; ela é estimativa conservadora, não limite de faturamento do provedor. Chamadas ambíguas mantêm a reserva, inclusive após reabrir; não há repetição automática. O limite inclui essas reservas e chamadas já em andamento são serializadas pelo núcleo. Moeda não pode mudar durante um mês com consumo remoto registrado.
 
 Ollama usa somente `http://127.0.0.1:11434/api/chat`, com modelo local escolhido pelo usuário, sem variante cloud e sem redirecionamentos/proxy. O aplicativo não instala o serviço nem modelos e continua funcionando sem ele. Geração e feedback validam esquemas e limites; trechos citados no feedback precisam existir no original. O feedback de IA é sugestão, não prova de execução/correção. Nenhuma chamada real OpenAI/Ollama foi feita nesta implementação. Contratos consultados: [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), [Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs), [OAuth Google para desktop](https://developers.google.com/identity/protocols/oauth2/native-app).
 
-Backup local: formato JSON LearningStudio v1/esquema 6, até 20 MiB. Antes da mesclagem, o arquivo é validado em SQLite temporário em memória e seus vínculos são conferidos. A gravação de dados novos ocorre em uma transação; IDs já existentes são preservados. Senha/hash, configurações de conta, segredos do cofre, filas de envio e vínculos remotos não são exportados. O conteúdo de estudo é legível no arquivo: guardar em local protegido. Importar não executa código nem envia mensagens. Backups desta versão não substituem ou apagam o banco atual.
+Backup local: formato JSON LearningStudio v1/esquema 7, até 20 MiB. Backups do esquema 6 continuam aceitos. Antes da mesclagem, o arquivo é validado em SQLite temporário em memória e seus vínculos são conferidos. A gravação de dados novos ocorre em uma transação; IDs já existentes são preservados. Senha/hash, configurações de conta, segredos do cofre, filas de envio e vínculos remotos não são exportados. O conteúdo de estudo é legível no arquivo: guardar em local protegido. Importar não executa código nem envia mensagens. Backups desta versão não substituem ou apagam o banco atual.
 
 ### Empacotamento
 
@@ -226,3 +248,31 @@ Integridade do executável instalado: SHA-256 `323397A8D9ABF26DE4251085C3CB4FDD6
 O pacote é NSIS x64, por usuário, em português, com ícone próprio e inclusão do bootstrapper WebView2 quando necessário. A assinatura Authenticode foi conferida: **NotSigned**. Nenhum certificado de assinatura foi fornecido. O workflow Windows prepara verificações e publicação do artefato quando houver repositório GitHub, usando os mesmos scripts nativos para carregar o ambiente C++; ele não foi executado remotamente.
 
 Próximo passo de uso: abrir o atalho LearningStudio e desbloquear com a senha existente. Google e IA podem ser configurados posteriormente nas telas próprias, com consentimento. O aceite com serviços reais requer essa configuração; as funções offline e as regras nativas estão verificadas pelos resultados acima.
+
+## Versão 0.2.0 — Trilhas e ativação de IA
+
+Esta ampliação aplica os novos requisitos de `AGENTS.md`. Fontes principais: [interface de Trilhas](src/components/TracksPage.tsx), [regras de progresso e comparação](src/domain/tracks.ts), [contratos nativos](src-tauri/src/models/tracks.rs), [persistência](src-tauri/src/store/tracks.rs), [migração 007](src-tauri/migrations/007_tracks.sql), [PDF offline](src-tauri/src/pdf.rs), [APIs de IA](src-tauri/src/ai.rs) e [ativação simplificada](src/components/TutorSettings.tsx).
+
+### Idiomas, planos e revisões
+
+Perfis persistem idioma, níveis CEFR declarados, prazo, minutos diários e dias disponíveis. A IA propõe planos editáveis com premissas, carga, atividades, critérios e revisões. A carga é conferida contra a disponibilidade, inclusive antes de aprovar; não há promessa de fluência. Edições criam versões e aplicar a mesma proposta não duplica etapas. O percurso mostra concluído, disponível e bloqueado na sequência recomendada; conclusão exige evidência.
+
+Lições podem ser geradas no idioma configurado. O PDF offline usa A4, fonte de 12 pontos, margens amplas e campos identificados. PDFs anotados de até 512 KiB são preservados como versões e podem ser exportados novamente. OCR manuscrito não está configurado: a correção envia somente a transcrição conferida e autorizada, preservando original, feedback e revisão separadamente. A exportação suporta alfabeto latino; caracteres sem suporte geram aviso sem alterar o material. Samsung Notes/S Pen não foram testados.
+
+Achados dos tutores entram no Reforço como sugestões não confirmadas, com tópico, categoria, trecho, explicação e correção. O estudante distingue erro, estilo e classificação equivocada. A prioridade considera recorrência, gravidade e desempenho posterior. Relembrar funciona offline, guarda respostas e autoavaliações, usa intervalos de 1/3/7/14/30 dias e impede duplicatas no mesmo dia. Autoavaliação não é teste determinístico.
+
+### Carreira, fontes, currículo e vagas
+
+Fontes incluem título, instituição, URL HTTPS, data e afirmação sustentada. A IA só pode citar IDs fornecidos; conteúdo sem evidência é sugestão não verificada. Temas sugeridos incluem pré-requisitos, prioridade, teoria, conceitos, exemplo explicado, desafio, critérios e artefato de portfólio. Exemplos não são executados.
+
+Currículos importam `.txt`, permitem edição e guardam versões. A IA fornece sugestões vinculadas ao original, sem substituir o currículo. O prazo de revisão é configurável e gera lembrete enquanto o aplicativo está aberto. Vagas são cadastradas manualmente com fonte, data, região, modalidade, senioridade, requisitos e evidência; não há busca automática nem afirmação de disponibilidade atual. A proximidade usa igualdade normalizada entre competências declaradas e requisitos. O ranking da amostra informa pesos de frequência, relevância pelo título do cargo, atualidade e lacunas. Cargo-alvo e região podem ser salvos. São heurísticas, sem promessa de contratação.
+
+GitHub consulta somente repositórios públicos autorizados, cinco commits e cinco execuções de CI, com data e SHAs. As URLs podem ser referenciadas nos checkpoints. O aplicativo não publica código, cria PRs nem executa workflows. GitHub privado e sandbox de código permanecem pendentes.
+
+### APIs, segurança e validação
+
+Comandos Tauri autenticados, validação nativa e migração SQLite transacional protegem os novos fluxos. Backup esquema 7 inclui os novos dados e aceita esquema 6, sem exportar senha, chaves ou filas externas. A ativação rápida usa cofre Windows e preset datado descrito em **IA e consumo**. OpenAI Responses usa JSON Schema estrito e `store: false`; Ollama mantém seu adaptador independente. Falhas de autenticação, modelo, saldo/limite e resposta inválida têm mensagens controladas. Não há repetição automática que duplique custos.
+
+Resultados antes da publicação: 66 testes Vitest, 60 testes Rust e nove testes Playwright aprovados. O navegador simula explicitamente o transporte IPC; a persistência é validada pela suíte Rust. Formatação, lint, tipos, Clippy e build da interface passaram. O PDF de exemplo foi renderizado e inspecionado em três páginas A4. A validação final e o empacotamento são registrados após a execução.
+
+Nenhuma geração/correção real OpenAI/Ollama ou autorização Google foi realizada nesta atualização. A chave será inserida pelo usuário no aplicativo. Busca automática de vagas, OCR manuscrito, GitHub privado e sandbox de código não são apresentados como concluídos.

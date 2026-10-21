@@ -28,7 +28,25 @@ pub(super) fn validate_backup(connection: &Connection) -> AppResult<()> {
             "career" => {
                 parse::<CareerContent>(&s)?;
             }
-            "career_preferences" => { let value:Value=parse(&s)?; text(value.get("targetRole").and_then(Value::as_str).ok_or_else(invalid)?,1,160)?; text(value.get("region").and_then(Value::as_str).ok_or_else(invalid)?,0,160)?; },
+            "career_preferences" => {
+                let value: Value = parse(&s)?;
+                text(
+                    value
+                        .get("targetRole")
+                        .and_then(Value::as_str)
+                        .ok_or_else(invalid)?,
+                    1,
+                    160,
+                )?;
+                text(
+                    value
+                        .get("region")
+                        .and_then(Value::as_str)
+                        .ok_or_else(invalid)?,
+                    0,
+                    160,
+                )?;
+            }
             "resume" => {
                 let r = parse::<ResumeVersion>(&s)?;
                 text(&r.text, 1, 30000)?;
@@ -255,8 +273,16 @@ impl Store {
                 .map_err(AppError::database)?;
             Ok("Versão anotada preservada. Para corrigir, confirme sua transcrição; OCR manuscrito não está configurado.".into())
         } else {
-            let encoded=encode(&lesson)?;
-            if encoded.chars().any(|c|c as u32>255 && !matches!(c,'\u{2019}'|'\u{201c}'|'\u{201d}'|'\u{2013}'|'\u{2014}')) {return Err(AppError::validation("O PDF desta versão suporta alfabeto latino. Esta lição contém caracteres ainda não suportados; seu conteúdo permanece salvo no aplicativo."));}
+            let encoded = encode(&lesson)?;
+            if encoded.chars().any(|c| {
+                c as u32 > 255
+                    && !matches!(
+                        c,
+                        '\u{2019}' | '\u{201c}' | '\u{201d}' | '\u{2013}' | '\u{2014}'
+                    )
+            }) {
+                return Err(AppError::validation("O PDF desta versão suporta alfabeto latino. Esta lição contém caracteres ainda não suportados; seu conteúdo permanece salvo no aplicativo."));
+            }
             let Some(path) = rfd::FileDialog::new()
                 .set_title("Exportar lição A4")
                 .set_file_name(format!("Licao-{lesson_id}.pdf"))
@@ -473,14 +499,54 @@ impl Store {
         self.require_auth()?;
         match action {
             TracksAction::ExportPdf { id } => {
-                use base64::Engine; use std::io::Write;
+                use base64::Engine;
+                use std::io::Write;
                 validation::id(&id)?;
-                let (name,encoded):(String,String)=self.connection.query_row("SELECT name,base64 FROM lesson_pdfs WHERE id=?1",[id],|r|Ok((r.get(0)?,r.get(1)?))).optional().map_err(AppError::database)?.ok_or_else(AppError::not_found)?;
-                let bytes=base64::engine::general_purpose::STANDARD.decode(encoded).map_err(|_|invalid())?;
-                let Some(path)=rfd::FileDialog::new().set_title("Exportar versão anotada preservada").set_file_name(name).add_filter("PDF",&["pdf"]).save_file() else {return Ok(());};
-                std::fs::OpenOptions::new().write(true).create_new(true).open(path).and_then(|mut f|{f.write_all(&bytes)?;f.sync_all()}).map_err(|_|AppError::validation("Escolha um novo nome em uma pasta gravável."))?;
+                let (name, encoded): (String, String) = self
+                    .connection
+                    .query_row(
+                        "SELECT name,base64 FROM lesson_pdfs WHERE id=?1",
+                        [id],
+                        |r| Ok((r.get(0)?, r.get(1)?)),
+                    )
+                    .optional()
+                    .map_err(AppError::database)?
+                    .ok_or_else(AppError::not_found)?;
+                let bytes = base64::engine::general_purpose::STANDARD
+                    .decode(encoded)
+                    .map_err(|_| invalid())?;
+                let Some(path) = rfd::FileDialog::new()
+                    .set_title("Exportar versão anotada preservada")
+                    .set_file_name(name)
+                    .add_filter("PDF", &["pdf"])
+                    .save_file()
+                else {
+                    return Ok(());
+                };
+                std::fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(path)
+                    .and_then(|mut f| {
+                        f.write_all(&bytes)?;
+                        f.sync_all()
+                    })
+                    .map_err(|_| {
+                        AppError::validation("Escolha um novo nome em uma pasta gravável.")
+                    })?;
             }
-            TracksAction::SaveCareerPreferences { target_role, region } => {text(&target_role,1,160)?;text(&region,0,160)?;self.document("career_preferences",None,&json!({"targetRole":target_role,"region":region}))?;}
+            TracksAction::SaveCareerPreferences {
+                target_role,
+                region,
+            } => {
+                text(&target_role, 1, 160)?;
+                text(&region, 0, 160)?;
+                self.document(
+                    "career_preferences",
+                    None,
+                    &json!({"targetRole":target_role,"region":region}),
+                )?;
+            }
             TracksAction::GenerateLanguageLesson {
                 profile_id,
                 topic,
@@ -621,7 +687,7 @@ impl Store {
                 let count: u64 = self
                     .connection
                     .query_row(
-                        "SELECT COUNT(*) FROM practice_reviews WHERE error_id=?1 AND recalled=1",
+                        "SELECT COUNT(*) FROM practice_reviews WHERE error_id=?1 AND recalled=1 AND reviewed_date>COALESCE((SELECT MAX(reviewed_date) FROM practice_reviews WHERE error_id=?1 AND recalled=0),'')",
                         [&id],
                         |r| r.get(0),
                     )
