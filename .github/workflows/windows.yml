@@ -1,0 +1,44 @@
+name: Windows validation and installer
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:native-format
+      - run: npm run test:native
+      - run: npm run lint:native
+      - run: python scripts/test_schema.py
+      - run: npx playwright install chromium
+      - run: npm run test:e2e
+      - run: npm run package:windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LearningStudio-windows-installer
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: validation-failures
+          path: |
+            test-results/
+            playwright-report/

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-pulse-session"
+description = "Enables the pulse_session command without any pre-configured scope."
+commands.allow = ["pulse_session"]
+
+[[permission]]
+identifier = "deny-pulse-session"
+description = "Denies the pulse_session command without any pre-configured scope."
+commands.deny = ["pulse_session"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-user-activity"
+description = "Enables the user_activity command without any pre-configured scope."
+commands.allow = ["user_activity"]
+
+[[permission]]
+identifier = "deny-user-activity"
+description = "Denies the user_activity command without any pre-configured scope."
+commands.deny = ["user_activity"]

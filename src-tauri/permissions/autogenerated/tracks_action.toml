@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-tracks-action"
+description = "Enables the tracks_action command without any pre-configured scope."
+commands.allow = ["tracks_action"]
+
+[[permission]]
+identifier = "deny-tracks-action"
+description = "Denies the tracks_action command without any pre-configured scope."
+commands.deny = ["tracks_action"]

@@ -1,0 +1,43 @@
+[package]
+name = "learningstudio"
+version = "0.2.0"
+description = "Organização pessoal de estudos, offline e exclusiva para Windows"
+authors = ["LearningStudio"]
+edition = "2021"
+rust-version = "1.99"
+
+[lib]
+name = "learningstudio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.37", features = ["bundled"] }
+argon2 = { version = "0.5", features = ["std"] }
+rand_core = { version = "0.6", features = ["getrandom"] }
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+csv = "1.4"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+keyring = { version = "3.6", default-features = false, features = ["windows-native"] }
+base64 = "0.22"
+sha2 = "0.10"
+webbrowser = "1"
+schemars = "0.8"
+rfd = { version = "0.15", default-features = false }
+zeroize = "1"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+strip = true

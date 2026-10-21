@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-agenda-snapshot"
+description = "Enables the agenda_snapshot command without any pre-configured scope."
+commands.allow = ["agenda_snapshot"]
+
+[[permission]]
+identifier = "deny-agenda-snapshot"
+description = "Denies the agenda_snapshot command without any pre-configured scope."
+commands.deny = ["agenda_snapshot"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-organizer-action"
+description = "Enables the organizer_action command without any pre-configured scope."
+commands.allow = ["organizer_action"]
+
+[[permission]]
+identifier = "deny-organizer-action"
+description = "Denies the organizer_action command without any pre-configured scope."
+commands.deny = ["organizer_action"]

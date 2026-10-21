@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-lesson-pdf"
+description = "Enables the lesson_pdf command without any pre-configured scope."
+commands.allow = ["lesson_pdf"]
+
+[[permission]]
+identifier = "deny-lesson-pdf"
+description = "Denies the lesson_pdf command without any pre-configured scope."
+commands.deny = ["lesson_pdf"]

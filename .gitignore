@@ -1,0 +1,15 @@
+node_modules/
+src-tauri/gen/
+dist/
+src-tauri/target/
+.tools/
+src-tauri/icons/icon.ico
+test-results/
+playwright-report/
+*.db
+*.db-shm
+*.db-wal
+*.log
+.env
+.env.*
+!.env.example

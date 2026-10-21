@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-tutor-snapshot"
+description = "Enables the tutor_snapshot command without any pre-configured scope."
+commands.allow = ["tutor_snapshot"]
+
+[[permission]]
+identifier = "deny-tutor-snapshot"
+description = "Denies the tutor_snapshot command without any pre-configured scope."
+commands.deny = ["tutor_snapshot"]

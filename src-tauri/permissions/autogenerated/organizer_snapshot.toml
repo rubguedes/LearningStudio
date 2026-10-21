@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-organizer-snapshot"
+description = "Enables the organizer_snapshot command without any pre-configured scope."
+commands.allow = ["organizer_snapshot"]
+
+[[permission]]
+identifier = "deny-organizer-snapshot"
+description = "Denies the organizer_snapshot command without any pre-configured scope."
+commands.deny = ["organizer_snapshot"]

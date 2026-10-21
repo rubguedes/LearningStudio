@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-tracks-snapshot"
+description = "Enables the tracks_snapshot command without any pre-configured scope."
+commands.allow = ["tracks_snapshot"]
+
+[[permission]]
+identifier = "deny-tracks-snapshot"
+description = "Denies the tracks_snapshot command without any pre-configured scope."
+commands.deny = ["tracks_snapshot"]
