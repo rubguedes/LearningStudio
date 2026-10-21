@@ -730,7 +730,7 @@ function ErrorPractice({
           }
         >
           <option value="unconfirmed">Sugestão ainda não confirmada</option>
-          <option value="error">Erro confirmado por mim</option>
+          <option value="error">Erro confirmado (gabarito ou estudante)</option>
           <option value="style">Alternativa de estilo</option>
           <option value="dismissed">Classificação equivocada</option>
         </select>
@@ -757,7 +757,9 @@ function ErrorPractice({
       {e.classification === "error" && (
         <>
           <label>
-            Reescreva o trecho e explique o ajuste
+            {e.category === "Compreensão"
+              ? "Explique a resposta e aplique a ideia em um exemplo"
+              : "Reescreva o trecho e explique o ajuste"}
             <textarea
               maxLength={4000}
               value={answer}

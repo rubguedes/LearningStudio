@@ -202,7 +202,7 @@ npm run test:native
 npm run lint:native
 python scripts/test_schema.py
 npm run test:e2e
-npm run tauri -- build --debug --no-bundle
+node scripts/native.cjs tauri build --debug --no-bundle
 ```
 
 Resultados da rodada final: formatação, lint, tipos e Clippy aprovados; 56 testes Vitest em nove arquivos e 51 testes Rust aprovados; build de produção da interface aprovado; oito testes Playwright aprovados após as correções; executáveis Windows de desenvolvimento e produção gerados. A janela Tauri de desenvolvimento foi aberta e a tela de criação de senha foi inspecionada no Windows. Após instalar o pacote final, a versão instalada abriu na tela de bloqueio e reconheceu a senha já configurada pelo usuário. A senha pessoal não foi definida ou digitada pelo agente. CRUD, senha incorreta/bloqueio e persistência após reabrir são cobertos pelos testes do armazenamento Rust; os fluxos visuais completos usam IPC explicitamente simulado no Chromium e não equivalem a teste de todo o fluxo na janela nativa. O teste de migração atualiza um banco do EPIC 2 para o esquema 6, preservando hash e tarefa. O teste do cofre Windows criou, leu e removeu uma entrada temporária isolada.
@@ -259,7 +259,7 @@ Perfis persistem idioma, níveis CEFR declarados, prazo, minutos diários e dias
 
 Lições podem ser geradas no idioma configurado. O PDF offline usa A4, fonte de 12 pontos, margens amplas e campos identificados. PDFs anotados de até 512 KiB são preservados como versões e podem ser exportados novamente. OCR manuscrito não está configurado: a correção envia somente a transcrição conferida e autorizada, preservando original, feedback e revisão separadamente. A exportação suporta alfabeto latino; caracteres sem suporte geram aviso sem alterar o material. Samsung Notes/S Pen não foram testados.
 
-Achados dos tutores entram no Reforço como sugestões não confirmadas, com tópico, categoria, trecho, explicação e correção. O estudante distingue erro, estilo e classificação equivocada. A prioridade considera recorrência, gravidade e desempenho posterior. Relembrar funciona offline, guarda respostas e autoavaliações, usa intervalos de 1/3/7/14/30 dias e impede duplicatas no mesmo dia. Autoavaliação não é teste determinístico.
+Achados dos tutores entram no Reforço como sugestões não confirmadas, com tópico, categoria, trecho, explicação e correção. Respostas incorretas nas questões offline de compreensão também geram reforço, comprovado pelo gabarito, sem exigir IA e com IDs determinísticos para evitar duplicação. O estudante pode revisar as classificações sem que a reabertura as sobrescreva. A prioridade considera recorrência, gravidade e desempenho posterior. Relembrar funciona offline, guarda respostas e autoavaliações, usa intervalos de 1/3/7/14/30 dias e impede duplicatas no mesmo dia. Autoavaliação não é teste determinístico.
 
 ### Carreira, fontes, currículo e vagas
 
@@ -273,6 +273,6 @@ GitHub consulta somente repositórios públicos autorizados, cinco commits e cin
 
 Comandos Tauri autenticados, validação nativa e migração SQLite transacional protegem os novos fluxos. Backup esquema 7 inclui os novos dados e aceita esquema 6, sem exportar senha, chaves ou filas externas. A ativação rápida usa cofre Windows e preset datado descrito em **IA e consumo**. OpenAI Responses usa JSON Schema estrito e `store: false`; Ollama mantém seu adaptador independente. Falhas de autenticação, modelo, saldo/limite e resposta inválida têm mensagens controladas. Não há repetição automática que duplique custos.
 
-Resultados antes da publicação: 66 testes Vitest, 60 testes Rust e nove testes Playwright aprovados. O navegador simula explicitamente o transporte IPC; a persistência é validada pela suíte Rust. Formatação, lint, tipos, Clippy e build da interface passaram. O PDF de exemplo foi renderizado e inspecionado em três páginas A4. A validação final e o empacotamento são registrados após a execução.
+Resultados locais da versão 0.2.0: 66 testes Vitest, 62 testes Rust, 24 testes SQL e nove testes Playwright aprovados. O navegador simula explicitamente o transporte IPC; a persistência é validada pela suíte Rust. Formatação, lint, tipos, Clippy e build da interface passaram. O PDF de exemplo foi renderizado e inspecionado em três páginas A4. O pacote NSIS 0.2.0 foi gerado em Windows e a instalação atualizada; o banco abriu no esquema 7, com a autenticação existente configurada. A janela foi aberta e seu encerramento manual confirmado pelo usuário. A senha pessoal não foi digitada pelo agente. O [pacote publicado](https://github.com/rubguedes/LearningStudio/releases/tag/v0.2.0) informa SHA-256 e limitações. O resultado remoto de CI deve ser conferido na execução correspondente ao commit, sem confundi-lo com a validação local.
 
 Nenhuma geração/correção real OpenAI/Ollama ou autorização Google foi realizada nesta atualização. A chave será inserida pelo usuário no aplicativo. Busca automática de vagas, OCR manuscrito, GitHub privado e sandbox de código não são apresentados como concluídos.

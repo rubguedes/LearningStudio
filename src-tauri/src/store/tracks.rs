@@ -356,6 +356,7 @@ impl Store {
     }
     pub fn tracks_snapshot(&mut self) -> AppResult<TracksSnapshot> {
         self.require_auth()?;
+        self.record_comprehension_mistakes()?;
         // Import feedback idempotently; AI findings require the student's confirmation.
         let evaluations: Vec<(String, String, String)> = {
             let mut q=self.connection.prepare("SELECT e.id,e.feedback,COALESCE(l.content,c.content,'{}') FROM evaluation_results e LEFT JOIN english_submissions s ON s.id=e.english_submission_id LEFT JOIN english_lessons l ON l.id=s.lesson_id LEFT JOIN code_submissions cs ON cs.id=e.code_submission_id LEFT JOIN coding_challenges c ON c.id=cs.challenge_id WHERE e.source IN ('openai','ollama')").map_err(AppError::database)?;
@@ -494,6 +495,47 @@ impl Store {
             pdfs,
             pdf_reviews,
         })
+    }
+    fn record_comprehension_mistakes(&self) -> AppResult<()> {
+        use sha2::{Digest, Sha256};
+        let mut query=self.connection.prepare("SELECT s.id,s.answers,l.content,s.submitted_at FROM english_submissions s JOIN english_lessons l ON l.id=s.lesson_id WHERE s.submitted_at IS NOT NULL").map_err(AppError::database)?;
+        let rows = query
+            .query_map([], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, String>(1)?,
+                    r.get::<_, String>(2)?,
+                    r.get::<_, String>(3)?,
+                ))
+            })
+            .map_err(AppError::database)?
+            .collect::<rusqlite::Result<Vec<_>>>()
+            .map_err(AppError::database)?;
+        for (submission, answers, content, submitted_at) in rows {
+            let answers: Vec<Option<usize>> = parse(&answers)?;
+            let lesson: EnglishLesson = parse(&content)?;
+            for (index, question) in lesson.questions.iter().enumerate() {
+                let Some(Some(selected)) = answers.get(index) else {
+                    continue;
+                };
+                if *selected == question.answer {
+                    continue;
+                }
+                let chosen = question.choices.get(*selected).ok_or_else(invalid)?;
+                let correction = question.choices.get(question.answer).ok_or_else(invalid)?;
+                // Deterministic UUIDv8: reopening, restoring or retrying cannot duplicate the same mistake.
+                let digest = Sha256::digest(format!(
+                    "LearningStudio/comprehension/v1/{submission}/{index}"
+                ));
+                let mut bytes = [0u8; 16];
+                bytes.copy_from_slice(&digest[..16]);
+                bytes[6] = (bytes[6] & 0x0f) | 0x80;
+                bytes[8] = (bytes[8] & 0x3f) | 0x80;
+                let id = uuid::Uuid::from_bytes(bytes).to_string();
+                self.connection.execute("INSERT INTO practice_errors VALUES(?1,NULL,?2,'Compreensão',?3,?4,?5,2,'error',?6) ON CONFLICT(id) DO NOTHING",params![id,lesson.title,format!("Q{}: {}\nSua escolha: {}",index+1,question.prompt,chosen),correction,question.explanation,submitted_at]).map_err(AppError::database)?;
+            }
+        }
+        Ok(())
     }
     pub fn tracks_action(&mut self, action: TracksAction) -> AppResult<()> {
         self.require_auth()?;
@@ -866,6 +908,61 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn offline_comprehension_populates_reinforcement_without_ai_or_duplicates() {
+        let mut s = store();
+        let lesson = s.library_snapshot().unwrap().lessons.remove(0);
+        let answers = lesson
+            .questions
+            .iter()
+            .map(|q| Some((q.answer + 1) % q.choices.len()))
+            .collect();
+        s.library_action(LibraryAction::SaveSubmission {
+            id: uuid::Uuid::new_v4().to_string(),
+            lesson_id: lesson.id,
+            writing: "My original response remains separate from the answer key.".into(),
+            answers,
+            submit: true,
+        })
+        .unwrap();
+        let errors = s.tracks_snapshot().unwrap().errors;
+        assert_eq!(errors.len(), lesson.questions.len());
+        assert!(errors
+            .iter()
+            .all(|e| e.category == "Compreensão" && e.classification == "error"));
+        assert_eq!(s.tracks_snapshot().unwrap().errors.len(), errors.len());
+        let id = errors[0].id.clone();
+        s.tracks_action(TracksAction::Classify {
+            id,
+            classification: "dismissed".into(),
+            severity: 1,
+        })
+        .unwrap();
+        assert_eq!(
+            s.tracks_snapshot()
+                .unwrap()
+                .errors
+                .iter()
+                .filter(|e| e.classification == "dismissed")
+                .count(),
+            1
+        );
+    }
+    #[test]
+    fn correct_offline_answers_do_not_invent_errors() {
+        let mut s = store();
+        let lesson = s.library_snapshot().unwrap().lessons.remove(0);
+        let answers = lesson.questions.iter().map(|q| Some(q.answer)).collect();
+        s.library_action(LibraryAction::SaveSubmission {
+            id: uuid::Uuid::new_v4().to_string(),
+            lesson_id: lesson.id,
+            writing: "An independently saved original essay.".into(),
+            answers,
+            submit: true,
+        })
+        .unwrap();
+        assert!(s.tracks_snapshot().unwrap().errors.is_empty());
+    }
     #[test]
     fn review_requires_confirmation_and_preserves_daily_history() {
         let mut s = store();
