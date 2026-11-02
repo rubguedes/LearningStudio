@@ -53,7 +53,13 @@ test("EPIC 6 com IPC simulado: código preservado, execução bloqueada e refer�
   ).toHaveValue("disabled");
   await expect(page.getByText("Nenhuma chave configurada.")).toBeVisible();
   await page.getByRole("button", { name: "Backup local", exact: true }).click();
-  await page.getByRole("button", { name: "Exportar backup local" }).click();
+  await page
+    .getByLabel("Senha do novo backup")
+    .fill("uma senha de backup para teste");
+  await page
+    .getByLabel("Confirmar senha do backup")
+    .fill("uma senha de backup para teste");
+  await page.getByRole("button", { name: "Exportar backup protegido" }).click();
   await expect(
     page.getByText(
       "Backup simulado pelo teste; nenhum arquivo real foi criado.",

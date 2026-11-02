@@ -6,6 +6,9 @@
   "windows": ["main"],
   "permissions": [
     "allow-auth-status",
+    "allow-generate-recovery-code",
+    "allow-recover-password",
+    "allow-window-fullscreen",
     "allow-setup-password",
     "allow-unlock",
     "allow-lock",

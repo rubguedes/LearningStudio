@@ -16,7 +16,9 @@ Ollama é uma alternativa opcional para quem já possui o serviço e um modelo l
 
 ## Recursos implementados
 
-- Senha Argon2id, bloqueio por inatividade, SQLite e migrações transacionais.
+- Banco SQLCipher criptografado, chave aleatória no cofre Windows, senha Argon2id e bloqueio por inatividade.
+- Recuperação de senha por código de uso único, gerado previamente em **Segurança**.
+- Tela cheia ao abrir, conteúdo em toda a largura, botão de saída e atalhos F11/Esc.
 - Áreas, tópicos, recursos, tarefas, cronômetro, metas, evidências, relatórios e agenda.
 - Perfis de idioma por nível, prazo e disponibilidade; propostas de plano editáveis e aprovadas antes de criar etapas.
 - Percursos visuais, lições offline, redações versionadas, vocabulário, reforço de erros e repetição espaçada.
@@ -24,7 +26,15 @@ Ollama é uma alternativa opcional para quem já possui o serviço e um modelo l
 - Conteúdo de carreira com fontes declaradas, currículo versionado e vagas com comparação transparente de competências.
 - Consulta autorizada de commits e CI de repositórios públicos GitHub, sem publicar nem executar workflows pelo aplicativo.
 - OpenAI Responses e Ollama com contratos tipados, consentimento, reservas de custo e orçamento mensal.
-- Google Calendar/Gmail com OAuth e filas locais; importação manual de tarefas do ChatGPT; backup validado sem segredos.
+- Google Calendar/Gmail com OAuth e filas locais; importação manual de tarefas do ChatGPT; backup portátil criptografado sem segredos.
+
+## Proteger e recuperar seus dados
+
+Na primeira abertura da versão 0.3.0, o banco existente é convertido para SQLCipher, com conferência de integridade e quantidade de registros antes da substituição. A senha atual continua válida. A chave do banco pertence ao cofre da conta atual do Windows: copiar somente o arquivo `.db` não permite restaurá-lo em outra conta ou computador.
+
+Depois de desbloquear, abra **Segurança**, confirme a senha atual e gere seu código de recuperação. Guarde-o fora do aplicativo, em local seguro. Em **Esqueci minha senha**, esse código permite definir uma nova senha sem apagar os estudos. Ele funciona uma única vez; gere outro após recuperar. Sem um código previamente configurado, o aplicativo não consegue redefinir uma senha esquecida.
+
+Em **Backup**, exporte um arquivo `.lsbackup` com senha própria de 12 a 128 caracteres. Seu conteúdo é protegido por AES-256-GCM e Argon2id e pode ser importado em outra instalação. Não exporta senhas, código de recuperação, chaves de API nem a chave do banco. A senha do backup não pode ser recuperada. Preserve um backup e sua senha para o caso de perder acesso ao cofre do Windows. Arquivos JSON e cópias antigas não são criptografados retroativamente; a importação de JSON legado exige autorização explícita.
 
 ## Limites atuais
 
@@ -36,10 +46,11 @@ Código do estudante não é executado sem sandbox comprovada. Análise estátic
 
 ## Desenvolvimento e instalador
 
-Execute em PowerShell, na raiz do repositório. Pré-requisitos: Node.js 22, Rust compatível com `src-tauri/Cargo.toml`, Microsoft C++ Build Tools e Windows SDK. O aplicativo não exige Docker nem backend HTTP local.
+Execute em PowerShell, na raiz do repositório. Pré-requisitos: Node.js 22, Rust compatível com `src-tauri/Cargo.toml`, Microsoft C++ Build Tools, Windows SDK e Strawberry Perl nativo para compilar OpenSSL/SQLCipher. O script encontra `C:\Strawberry\perl\bin\perl.exe` ou `.tools/perl/perl/bin/perl.exe`; um caminho alternativo pode ser informado em `OPENSSL_SRC_PERL`. Perl do MSYS/Git não substitui o Perl nativo. Essas ferramentas não são necessárias para usar o instalador. O aplicativo não exige Docker nem backend HTTP local.
 
 ```powershell
 npm ci
+npm run check:windows
 npm run lint
 npm run typecheck
 npm test

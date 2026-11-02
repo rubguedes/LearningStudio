@@ -1,8 +1,15 @@
 fn main() {
+    // Vendored OpenSSL omits its private PDB. Suppress only missing-debug-symbol
+    // warnings; this does not hide unresolved symbols or compiler diagnostics.
+    #[cfg(windows)]
+    println!("cargo:rustc-link-arg=/IGNORE:4099");
     create_icon();
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
             "auth_status",
+            "window_fullscreen",
+            "generate_recovery_code",
+            "recover_password",
             "setup_password",
             "unlock",
             "lock",

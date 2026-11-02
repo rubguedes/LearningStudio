@@ -18,6 +18,10 @@ export function fakeApi(configured = false) {
     if (!unlocked) throw new ApiError("LOCKED", "Sessão bloqueada.");
   };
   const api = {
+    recoverPassword: vi.fn<StudyApi["recoverPassword"]>(async () => {
+      unlocked = false;
+      return { configured: true, unlocked: false };
+    }),
     authStatus: vi.fn(async () => ({ configured: created, unlocked })),
     setupPassword: vi.fn<StudyApi["setupPassword"]>(async () => {
       created = true;

@@ -13,9 +13,20 @@ use std::{
 use zeroize::Zeroizing;
 
 const IDLE_TIMEOUT: Duration = Duration::from_secs(15 * 60);
+pub(crate) fn password_valid(password: &str) -> AppResult<()> {
+    if !(12..=128).contains(&password.chars().count())
+        || password.trim().chars().count() < 12
+        || password.contains('\0')
+    {
+        return Err(AppError::validation("Use uma senha de 12 a 128 caracteres, sem espaços nas extremidades como preenchimento."));
+    }
+    Ok(())
+}
 
 pub struct Store {
     connection: Connection,
+    _database_lock: Option<std::fs::File>,
+    encrypted: bool,
     authenticated_at: Option<Instant>,
     failed_attempts: u8,
     retry_after: Option<Instant>,
@@ -29,7 +40,8 @@ fn now() -> String {
 
 impl Store {
     pub fn open(path: &Path) -> AppResult<Self> {
-        let connection = Connection::open(path).map_err(AppError::database)?;
+        let managed = crate::database::open(path)?;
+        let connection = managed.connection;
         connection
             .busy_timeout(Duration::from_secs(5))
             .map_err(AppError::database)?;
@@ -40,6 +52,8 @@ impl Store {
             .map_err(AppError::database)?;
         let mut store = Self {
             connection,
+            _database_lock: managed.lock,
+            encrypted: managed.encrypted,
             authenticated_at: None,
             failed_attempts: 0,
             retry_after: None,
@@ -168,6 +182,15 @@ impl Store {
         Ok(AuthStatus {
             configured: self.password_hash()?.is_some(),
             unlocked: self.is_unlocked(),
+            encrypted: self.encrypted,
+            recovery_configured: self
+                .connection
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM app_settings WHERE key='recovery_hash')",
+                    [],
+                    |r| r.get(0),
+                )
+                .map_err(AppError::database)?,
         })
     }
 
@@ -440,6 +463,7 @@ mod google;
 mod library;
 mod organizer;
 mod progress;
+mod security;
 mod tracks;
 mod tutors;
 

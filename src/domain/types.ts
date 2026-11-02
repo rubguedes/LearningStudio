@@ -43,6 +43,8 @@ export interface Snapshot {
 export interface AuthStatus {
   configured: boolean;
   unlocked: boolean;
+  encrypted?: boolean;
+  recoveryConfigured?: boolean;
 }
 export type Page =
   | "dashboard"
@@ -62,12 +64,14 @@ export type Page =
   | "tutors"
   | "settings"
   | "backup"
-  | "resources";
+  | "resources"
+  | "security";
 // Biblioteca offline possui carregamento separado do painel de tarefas.
 export interface StudyApi {
   authStatus(): Promise<AuthStatus>;
   setupPassword(password: string): Promise<AuthStatus>;
   unlock(password: string): Promise<AuthStatus>;
+  recoverPassword(code: string, password: string): Promise<AuthStatus>;
   lock(): Promise<void>;
   userActivity(): Promise<void>;
   snapshot(): Promise<Snapshot>;

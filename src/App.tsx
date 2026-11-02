@@ -23,6 +23,7 @@ import { TutorPage } from "./components/TutorPage";
 import { BackupPage } from "./components/BackupPage";
 import { OperationErrorContext } from "./domain/operationError";
 import { ResourcesPage } from "./components/ResourcesPage";
+import { SecurityPage } from "./components/SecurityPage";
 
 type Modal =
   | { kind: "area"; area: StudyArea | null }
@@ -62,6 +63,7 @@ export function App({ api = tauriApi }: { api?: StudyApi }) {
     setNotice("");
     setPage("dashboard");
     setAuth((previous) => ({
+      ...previous,
       configured: previous?.configured ?? true,
       unlocked: false,
     }));
@@ -213,6 +215,26 @@ export function App({ api = tauriApi }: { api?: StudyApi }) {
     }
   }
 
+  async function recoverPassword(code: string, password: string) {
+    if (executing.current) return false;
+    executing.current = true;
+    setBusy(true);
+    setError("");
+    clearPrivateState();
+    const generation = epoch.current;
+    try {
+      const status = await api.recoverPassword(code, password);
+      if (generation !== epoch.current) return false;
+      setAuth(status);
+      return true;
+    } catch (issue: unknown) {
+      if (generation === epoch.current) setError(normalizeError(issue).message);
+      return false;
+    } finally {
+      executing.current = false;
+      if (generation === epoch.current) setBusy(false);
+    }
+  }
   async function mutate(
     action: () => Promise<void>,
     message: string,
@@ -319,6 +341,7 @@ export function App({ api = tauriApi }: { api?: StudyApi }) {
         busy={busy}
         error={error}
         onSubmit={authenticate}
+        onRecover={recoverPassword}
       />
     );
   if (!snapshot)
@@ -445,6 +468,11 @@ export function App({ api = tauriApi }: { api?: StudyApi }) {
                 page={page}
                 busy={busy}
                 setPage={setPage}
+                run={(action, message) => mutate(action, message)}
+              />
+            ) : page === "security" ? (
+              <SecurityPage
+                busy={busy}
                 run={(action, message) => mutate(action, message)}
               />
             ) : page === "backup" ? (

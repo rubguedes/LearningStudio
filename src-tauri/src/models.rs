@@ -44,6 +44,8 @@ pub type AppResult<T> = Result<T, AppError>;
 pub struct AuthStatus {
     pub configured: bool,
     pub unlocked: bool,
+    pub encrypted: bool,
+    pub recovery_configured: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

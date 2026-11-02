@@ -16,12 +16,26 @@ function setEnvironment(name, value) {
   }
   environment[name] = value;
 }
+const localPerl = fs.existsSync(
+  path.join(root, ".tools", "perl", "perl", "bin", "perl.exe"),
+)
+  ? path.join(root, ".tools", "perl", "perl", "bin")
+  : "C:\\Strawberry\\perl\\bin";
+if (
+  !environment.OPENSSL_SRC_PERL &&
+  fs.existsSync(path.join(localPerl, "perl.exe"))
+) {
+  setEnvironment("OPENSSL_SRC_PERL", path.join(localPerl, "perl.exe"));
+  setEnvironment("PATH", localPerl + path.delimiter + (process.env.PATH || ""));
+}
 if (fs.existsSync(path.join(localCargo, "bin", "cargo.exe"))) {
   setEnvironment("CARGO_HOME", localCargo);
   setEnvironment("RUSTUP_HOME", path.join(root, ".tools", "rustup"));
   setEnvironment(
     "PATH",
-    path.join(localCargo, "bin") + path.delimiter + (process.env.PATH || ""),
+    path.join(localCargo, "bin") +
+      path.delimiter +
+      (environment.PATH || process.env.PATH || ""),
   );
 }
 // Carrega INCLUDE/LIB/PATH somente no processo de compilação. A instalação

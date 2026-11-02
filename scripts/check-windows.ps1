@@ -8,6 +8,10 @@ if (Test-Path -LiteralPath (Join-Path $projectCargo 'bin\cargo.exe')) {
 }
 if ($env:OS -ne 'Windows_NT') { throw 'O alvo suportado é Windows.' }
 $missing = @()
+$projectPerl = Join-Path $projectRoot '.tools\perl\perl\bin\perl.exe'
+if (-not ((Test-Path -LiteralPath $projectPerl) -or (Test-Path -LiteralPath 'C:\Strawberry\perl\bin\perl.exe') -or ($env:OPENSSL_SRC_PERL -and (Test-Path -LiteralPath $env:OPENSSL_SRC_PERL)))) {
+    $missing += 'Strawberry Perl nativo (SQLCipher/OpenSSL); configure OPENSSL_SRC_PERL com o caminho de perl.exe'
+}
 foreach ($tool in @('node', 'npm.cmd', 'cargo', 'rustc')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { $missing += $tool }
 }

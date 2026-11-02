@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { command } from "../services/tauri";
+import { passwordError } from "../domain/rules";
 import { Dialog } from "./Dialog";
 export function BackupPage({
   busy,
@@ -9,60 +10,110 @@ export function BackupPage({
   run(fn: () => Promise<void>, message: string): Promise<boolean>;
 }) {
   const [confirm, setConfirm] = useState(false),
-    [result, setResult] = useState("");
-  async function perform(name: "export_backup" | "import_backup") {
+    [result, setResult] = useState(""),
+    [password, setPassword] = useState(""),
+    [confirmation, setConfirmation] = useState(""),
+    [importPassword, setImportPassword] = useState(""),
+    [legacy, setLegacy] = useState(false),
+    [error, setError] = useState("");
+  async function perform(
+    name: "export_backup" | "import_backup",
+    submitted: string,
+  ) {
     let message = "";
     const ok = await run(async () => {
-      message = await command<string>(name);
+      message = await command<string>(name, {
+        password: submitted,
+        allowLegacy: legacy,
+      });
     }, "Operação de backup concluída.");
     if (ok) {
       setResult(message);
       setConfirm(false);
+      setLegacy(false);
     }
   }
   return (
     <div className="library-page">
       <section className="panel">
-        <h2>Seus estudos, em uma cópia local</h2>
+        <h2>Backup portátil protegido por senha</h2>
         <p>
-          O backup inclui estudos, tarefas, trilhas, lições, redações,
-          vocabulário, agenda, desafios, revisões e registros de consumo. O
-          arquivo é JSON legível; guarde-o em local protegido.
+          Estudos, tarefas, trilhas, lições, redações, vocabulário, agenda,
+          desafios e revisões são exportados com criptografia AES-256-GCM. O
+          arquivo .lsbackup pode ser aberto em outra instalação do
+          LearningStudio com a senha escolhida aqui, sem depender do cofre deste
+          computador.
         </p>
         <p>
-          A senha do aplicativo, seu hash, chaves de API, tokens Google, filas
-          de envio e vínculos remotos não são exportados. O conteúdo escrito por
-          você continua dentro do arquivo; confira informações pessoais antes de
-          compartilhá-lo.
+          Senha do aplicativo, código de recuperação, chaves de API, tokens e
+          filas de envio não são exportados. Guarde a senha do backup em um
+          gerenciador separado: não há recuperação dessa senha.
         </p>
-        <button
-          className="button primary"
-          disabled={busy}
-          onClick={() => void perform("export_backup")}
+        <form
+          className="editor-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const issue = passwordError(password, confirmation);
+            if (issue) {
+              setError(issue);
+              return;
+            }
+            const submitted = password;
+            setPassword("");
+            setConfirmation("");
+            setError("");
+            void perform("export_backup", submitted);
+          }}
         >
-          Exportar backup local
-        </button>
+          <label>
+            Senha do novo backup
+            <input
+              type="password"
+              required
+              minLength={12}
+              maxLength={128}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          <label>
+            Confirmar senha do backup
+            <input
+              type="password"
+              required
+              minLength={12}
+              maxLength={128}
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(e) => setConfirmation(e.target.value)}
+            />
+          </label>
+          {error && <p role="alert">{error}</p>}
+          <button className="button primary" disabled={busy}>
+            Exportar backup protegido
+          </button>
+        </form>
         <p className="helper">
-          Escolha um nome novo. Um arquivo existente não será sobrescrito pelo
-          aplicativo.
+          Escolha um nome novo. Arquivos existentes não são sobrescritos.
+          Backups JSON exportados em versões anteriores continuam sem
+          criptografia.
         </p>
       </section>
       <section className="panel">
         <h2>Mesclar um backup</h2>
         <p>
-          Registros ausentes serão adicionados em uma transação. Registros
-          existentes com a mesma identificação são preservados. A importação não
-          apaga seu banco atual nem altera sua senha.
-        </p>
-        <p>
-          O aplicativo valida o formato, os dados estruturados, as restrições do
-          banco e os vínculos antes de gravar. Sessões em andamento voltam
-          pausadas. A importação não dispara e-mails, eventos ou chamadas de IA.
+          Novos registros são adicionados em uma transação após autenticação e
+          validação. Registros já existentes e sua senha atual são preservados.
+          A importação não envia e-mails, eventos ou solicitações de IA.
         </p>
         <button
           className="button secondary"
           disabled={busy}
-          onClick={() => setConfirm(true)}
+          onClick={() => {
+            setConfirm(true);
+            setImportPassword("");
+          }}
         >
           Selecionar backup para mesclar
         </button>
@@ -76,29 +127,61 @@ export function BackupPage({
         <Dialog
           title="Mesclar dados do backup?"
           busy={busy}
-          onClose={() => setConfirm(false)}
+          onClose={() => {
+            setConfirm(false);
+            setImportPassword("");
+          }}
         >
           <p>
             Selecione somente uma cópia do LearningStudio de origem confiável.
-            Os registros existentes serão preservados; novos dados serão
-            adicionados após validação.
           </p>
-          <div className="dialog-actions">
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setConfirm(false)}
-            >
-              Cancelar
-            </button>
-            <button
-              className="button primary"
-              disabled={busy}
-              onClick={() => void perform("import_backup")}
-            >
-              Escolher arquivo e mesclar
-            </button>
-          </div>
+          <form
+            className="editor-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const submitted = importPassword;
+              setImportPassword("");
+              void perform("import_backup", submitted);
+            }}
+          >
+            <label>
+              Senha do backup
+              <input
+                type="password"
+                required={!legacy}
+                minLength={12}
+                maxLength={128}
+                autoComplete="off"
+                value={importPassword}
+                onChange={(e) => setImportPassword(e.target.value)}
+              />
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={legacy}
+                onChange={(e) => setLegacy(e.target.checked)}
+              />
+              Permitir importar JSON legado sem criptografia. Entendo que esse
+              arquivo antigo é legível.
+            </label>
+            <div className="dialog-actions">
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => {
+                  setConfirm(false);
+                  setImportPassword("");
+                }}
+              >
+                Cancelar
+              </button>
+              <button className="button primary" disabled={busy}>
+                Escolher arquivo e mesclar
+              </button>
+            </div>
+          </form>
         </Dialog>
       )}
     </div>

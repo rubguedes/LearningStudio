@@ -263,20 +263,22 @@ impl Store {
         tx.commit().map_err(|_| invalid())?;
         Ok(result)
     }
-    pub fn export_backup(&mut self) -> AppResult<String> {
+    pub fn export_backup(&mut self, password: Zeroizing<String>) -> AppResult<String> {
         self.require_auth()?;
+        password_valid(&password)?;
         let path = rfd::FileDialog::new()
             .set_title("Exportar dados do LearningStudio")
-            .add_filter("Backup LearningStudio", &["json"])
+            .add_filter("Backup protegido LearningStudio", &["lsbackup"])
             .set_file_name(format!(
-                "LearningStudio-{}.json",
+                "LearningStudio-{}.lsbackup",
                 Utc::now().format("%Y%m%d-%H%M%S")
             ))
             .save_file();
         let Some(path) = path else {
             return Ok("Exportação cancelada.".into());
         };
-        let content = self.backup_json()?;
+        let content = Zeroizing::new(self.backup_json()?);
+        let content = crate::protected_backup::encrypt(&content, &password)?;
         let mut file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -290,21 +292,40 @@ impl Store {
         file.write_all(content.as_bytes()).and_then(|_|file.sync_all()).map_err(|_|AppError::new("FILE","Não foi possível concluir a gravação. O arquivo incompleto não deve ser usado."))?;
         Ok(format!("Backup salvo em {}", path.display()))
     }
-    pub fn import_backup(&mut self) -> AppResult<String> {
+    pub fn import_backup(
+        &mut self,
+        password: Zeroizing<String>,
+        allow_legacy: bool,
+    ) -> AppResult<String> {
         self.require_auth()?;
         let path = rfd::FileDialog::new()
             .set_title("Mesclar backup do LearningStudio")
-            .add_filter("Backup LearningStudio", &["json"])
+            .add_filter("Backup LearningStudio", &["lsbackup", "json"])
             .pick_file();
         let Some(path) = path else {
             return Ok("Importação cancelada.".into());
         };
         let file = std::fs::File::open(path).map_err(|_| invalid())?;
         let mut content = String::new();
-        file.take((LIMIT + 1) as u64)
+        file.take((crate::protected_backup::MAX_ENVELOPE + 1) as u64)
             .read_to_string(&mut content)
             .map_err(|_| invalid())?;
-        let (added, skipped) = self.merge_backup(&content)?;
+        if content.len() > crate::protected_backup::MAX_ENVELOPE {
+            return Err(invalid());
+        }
+        let clear = if serde_json::from_str::<Value>(&content)
+            .ok()
+            .and_then(|v| v.get("format").and_then(Value::as_str).map(str::to_owned))
+            .as_deref()
+            == Some("LearningStudioEncryptedBackup")
+        {
+            crate::protected_backup::decrypt(&content, &password)?
+        } else if allow_legacy {
+            Zeroizing::new(content)
+        } else {
+            return Err(AppError::validation("Este arquivo é um backup JSON legado sem criptografia. Autorize explicitamente essa importação."));
+        };
+        let (added, skipped) = self.merge_backup(&clear)?;
         Ok(format!(
             "{added} registros adicionados. {skipped} registros já existentes foram preservados."
         ))
@@ -342,6 +363,9 @@ mod tests {
     #[test]
     fn backup_excludes_password_secrets_and_outbound_queue() {
         let mut s = store();
+        let recovery = s
+            .generate_recovery_code(super::super::tests::password())
+            .unwrap();
         s.connection
             .execute(
                 "INSERT INTO app_settings VALUES('fixture-api-key','secret-value')",
@@ -351,6 +375,8 @@ mod tests {
         s.save_task(task_input(None)).unwrap();
         let json = s.backup_json().unwrap();
         assert!(!json.contains("argon2"));
+        assert!(!json.contains("recovery_hash"));
+        assert!(!json.contains(&recovery));
         assert!(!json.contains("secret-value"));
         assert!(!json.contains("app_settings"));
         assert!(!json.contains("sync_records"));

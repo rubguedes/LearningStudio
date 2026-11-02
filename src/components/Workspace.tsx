@@ -26,6 +26,7 @@ import { dateKey, isOverdue, selectTasks } from "../domain/rules";
 import type { Page, Snapshot, StudyArea, Task } from "../domain/types";
 import { TaskList } from "./TaskList";
 import { StudyOverview } from "./ProgressPage";
+import { WindowControls } from "./WindowControls";
 
 interface Props {
   snapshot: Snapshot;
@@ -79,6 +80,7 @@ export function Workspace(props: Props) {
     settings: "IA e consumo",
     backup: "Backup local",
     resources: "Tópicos e recursos",
+    security: "Segurança e recuperação",
   };
   const taskListProps = {
     areas: snapshot.areas,
@@ -135,6 +137,7 @@ export function Workspace(props: Props) {
               { id: "tutors", label: "Tutor de inglês", icon: BookOpen },
               { id: "settings", label: "IA e consumo", icon: Sparkles },
               { id: "backup", label: "Backup local", icon: ArrowDownToLine },
+              { id: "security", label: "Segurança", icon: ShieldCheck },
             ] as const
           ).map((item) => (
             <button
@@ -178,7 +181,7 @@ export function Workspace(props: Props) {
             <span>Bloquear espaço</span>
             <kbd aria-hidden="true">⌃ ⇧ L</kbd>
           </button>
-          <span className="version">LearningStudio · base 0.1</span>
+          <span className="version">LearningStudio · 0.3.0</span>
         </div>
       </aside>
       <div className="workspace">
@@ -188,10 +191,13 @@ export function Workspace(props: Props) {
             <ChevronRight size={14} />
             <span>{headings[page]}</span>
           </div>
-          <span className="local-badge">
-            <ShieldCheck size={15} />
-            Pessoal e local
-          </span>
+          <div className="inline-actions">
+            <WindowControls />
+            <span className="local-badge">
+              <ShieldCheck size={15} />
+              Pessoal e local
+            </span>
+          </div>
         </header>
         <main id="main-content" className="main-content">
           <div className="page-heading">

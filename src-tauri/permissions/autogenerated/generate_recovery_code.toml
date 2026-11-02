@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-generate-recovery-code"
+description = "Enables the generate_recovery_code command without any pre-configured scope."
+commands.allow = ["generate_recovery_code"]
+
+[[permission]]
+identifier = "deny-generate-recovery-code"
+description = "Denies the generate_recovery_code command without any pre-configured scope."
+commands.deny = ["generate_recovery_code"]

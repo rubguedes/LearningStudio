@@ -19,6 +19,7 @@ jobs:
         with:
           components: rustfmt, clippy
       - run: npm ci
+      - run: npm run check:windows
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

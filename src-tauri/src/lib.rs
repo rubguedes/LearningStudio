@@ -1,7 +1,9 @@
 mod ai;
+mod database;
 mod models;
 mod network;
 mod pdf;
+mod protected_backup;
 mod store;
 mod validation;
 mod vault;
@@ -13,6 +15,35 @@ use tauri::{Manager, State};
 use zeroize::Zeroizing;
 
 type SharedStore = Arc<Mutex<Store>>;
+#[tauri::command]
+fn window_fullscreen(window: tauri::Window, enabled: Option<bool>) -> AppResult<bool> {
+    if let Some(value) = enabled {
+        window
+            .set_fullscreen(value)
+            .map_err(|_| AppError::new("WINDOW", "Não foi possível mudar o modo da janela."))?;
+    }
+    window
+        .is_fullscreen()
+        .map_err(|_| AppError::new("WINDOW", "Não foi possível consultar o modo da janela."))
+}
+#[tauri::command]
+async fn generate_recovery_code(
+    state: State<'_, SharedStore>,
+    password: String,
+) -> AppResult<String> {
+    let password = Zeroizing::new(password);
+    with_store(&state, move |s| s.generate_recovery_code(password)).await
+}
+#[tauri::command]
+async fn recover_password(
+    state: State<'_, SharedStore>,
+    code: String,
+    password: String,
+) -> AppResult<AuthStatus> {
+    let code = Zeroizing::new(code);
+    let password = Zeroizing::new(password);
+    with_store(&state, move |s| s.recover_password(code, password)).await
+}
 
 #[tauri::command]
 async fn tracks_snapshot(state: State<'_, SharedStore>) -> AppResult<TracksSnapshot> {
@@ -218,12 +249,18 @@ async fn challenge_solution(state: State<'_, SharedStore>, id: String) -> AppRes
 }
 
 #[tauri::command]
-async fn export_backup(state: State<'_, SharedStore>) -> AppResult<String> {
-    with_store(&state, |s| s.export_backup()).await
+async fn export_backup(state: State<'_, SharedStore>, password: String) -> AppResult<String> {
+    let password = Zeroizing::new(password);
+    with_store(&state, move |s| s.export_backup(password)).await
 }
 #[tauri::command]
-async fn import_backup(state: State<'_, SharedStore>) -> AppResult<String> {
-    with_store(&state, |s| s.import_backup()).await
+async fn import_backup(
+    state: State<'_, SharedStore>,
+    password: String,
+    allow_legacy: bool,
+) -> AppResult<String> {
+    let password = Zeroizing::new(password);
+    with_store(&state, move |s| s.import_backup(password, allow_legacy)).await
 }
 
 #[tauri::command]
@@ -250,6 +287,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             auth_status,
+            window_fullscreen,
+            generate_recovery_code,
+            recover_password,
             setup_password,
             unlock,
             lock,

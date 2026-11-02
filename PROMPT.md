@@ -219,7 +219,7 @@ As 24 verificações Python/SQLite dos EPICs 1–2 passaram novamente na rodada 
 
 ### Dados e limitações
 
-O banco normalmente fica em `%LOCALAPPDATA%\com.learningstudio.desktop\learningstudio.db`. A senha protege o acesso pelo aplicativo; o banco ainda não é criptografado. Não há recuperação de senha. Redações e instruções importadas permanecem locais. Conteúdo externo é exibido como texto, sem executar scripts ou código. Não há notificações/envios com o aplicativo fechado.
+O banco normalmente fica em `%LOCALAPPDATA%\com.learningstudio.desktop\learningstudio.db`. Na entrega de 19/10, a senha protegia o acesso pelo aplicativo, sem criptografia ou recuperação. Essas duas limitações foram tratadas na versão 0.3.0, descrita ao final deste documento. Redações e instruções importadas permanecem locais. Conteúdo externo é exibido como texto, sem executar scripts ou código. Não há notificações/envios com o aplicativo fechado.
 
 O CSV aceita cabeçalho exato `externalId,title,instructions,schedule,url,notes`; JSON aceita uma lista de objetos com esses seis campos. Até 200 registros/256 KiB, IDs únicos no lote, links HTTPS opcionais. Mesma externalId atualiza a importação preservando vínculo local. Horário/recorrência importados são referência textual; configurar/ativar recorrência é uma escolha separada na agenda.
 
@@ -231,7 +231,7 @@ Em **IA e consumo**, a configuração inicial é desativada. Na versão 0.2.0, b
 
 Ollama usa somente `http://127.0.0.1:11434/api/chat`, com modelo local escolhido pelo usuário, sem variante cloud e sem redirecionamentos/proxy. O aplicativo não instala o serviço nem modelos e continua funcionando sem ele. Geração e feedback validam esquemas e limites; trechos citados no feedback precisam existir no original. O feedback de IA é sugestão, não prova de execução/correção. Nenhuma chamada real OpenAI/Ollama foi feita nesta implementação. Contratos consultados: [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), [Ollama Structured Outputs](https://docs.ollama.com/capabilities/structured-outputs), [OAuth Google para desktop](https://developers.google.com/identity/protocols/oauth2/native-app).
 
-Backup local: formato JSON LearningStudio v1/esquema 7, até 20 MiB. Backups do esquema 6 continuam aceitos. Antes da mesclagem, o arquivo é validado em SQLite temporário em memória e seus vínculos são conferidos. A gravação de dados novos ocorre em uma transação; IDs já existentes são preservados. Senha/hash, configurações de conta, segredos do cofre, filas de envio e vínculos remotos não são exportados. O conteúdo de estudo é legível no arquivo: guardar em local protegido. Importar não executa código nem envia mensagens. Backups desta versão não substituem ou apagam o banco atual.
+Backup local nas versões até 0.2.0: formato JSON LearningStudio v1/esquema 7, até 20 MiB. Backups do esquema 6 continuam aceitos. Antes da mesclagem, o arquivo é validado em SQLite temporário em memória e seus vínculos são conferidos. A gravação de dados novos ocorre em uma transação; IDs já existentes são preservados. Senha/hash, configurações de conta, segredos do cofre, filas de envio e vínculos remotos não são exportados. O conteúdo de estudo desses arquivos antigos é legível: guardar em local protegido. A versão 0.3.0 exporta somente backups criptografados, conforme descrito abaixo. Importar não executa código nem envia mensagens. Backups não substituem ou apagam o banco atual.
 
 ### Empacotamento
 
@@ -276,3 +276,35 @@ Comandos Tauri autenticados, validação nativa e migração SQLite transacional
 Resultados locais da versão 0.2.0: 66 testes Vitest, 62 testes Rust, 24 testes SQL e nove testes Playwright aprovados. O navegador simula explicitamente o transporte IPC; a persistência é validada pela suíte Rust. Formatação, lint, tipos, Clippy e build da interface passaram. O PDF de exemplo foi renderizado e inspecionado em três páginas A4. O pacote NSIS 0.2.0 foi gerado em Windows e a instalação atualizada; o banco abriu no esquema 7, com a autenticação existente configurada. A janela foi aberta e seu encerramento manual confirmado pelo usuário. A senha pessoal não foi digitada pelo agente. O [pacote publicado](https://github.com/rubguedes/LearningStudio/releases/tag/v0.2.0) informa SHA-256 e limitações. O resultado remoto de CI deve ser conferido na execução correspondente ao commit, sem confundi-lo com a validação local.
 
 Nenhuma geração/correção real OpenAI/Ollama ou autorização Google foi realizada nesta atualização. A chave será inserida pelo usuário no aplicativo. Busca automática de vagas, OCR manuscrito, GitHub privado e sandbox de código não são apresentados como concluídos.
+
+## Versão 0.3.0 — Criptografia, recuperação e tela cheia
+
+Atualização de 02/11/2026. Fontes principais: `src-tauri/src/database.rs`, `protected_backup.rs`, `store/security.rs`, `store/backup.rs`, `src/components/SecurityPage.tsx`, `AuthScreen.tsx`, `BackupPage.tsx`, `WindowControls.tsx`, `src/styles.css` e `src-tauri/tauri.conf.json`.
+
+### Banco criptografado e migração
+
+O armazenamento em disco usa SQLCipher com OpenSSL incorporado estaticamente ao executável. A chave aleatória de 256 bits fica exclusivamente no cofre de credenciais da conta atual do Windows, na entrada interna `database-encryption-v1`. Não é derivada da senha local. A senha Argon2id continua protegendo o acesso aos comandos e à interface. Isso protege o arquivo em repouso; não impede que programas com acesso à mesma conta Windows comprometida obtenham dados enquanto o aplicativo está aberto.
+
+Na primeira abertura, o aplicativo identifica um SQLite legado pelo cabeçalho, obtém e confere a chave no cofre, encerra o WAL e usa a operação oficial [sqlcipher_export](https://www.zetetic.net/sqlcipher/sqlcipher-api/#sqlcipher_export) para um arquivo candidato criptografado no mesmo diretório. Verifica integridade, tabelas e contagem de registros, preserva metadados e substitui o original por renomeação atômica no Windows. Uma falha antes da substituição mantém o original como fonte de dados; candidatos eventualmente retidos já são criptografados. O bloqueio exclusivo de arquivo impede duas instâncias de acessarem o mesmo banco. Arquivos temporários SQLite ficam em memória.
+
+Não há fallback para SQLite sem criptografia. Se o banco já é criptografado e a chave falta no cofre, a abertura é recusada sem gerar outra chave ou alterar o arquivo. Perder o perfil/cofre do Windows exige restaurar um backup portátil protegido em uma instalação nova. O código de recuperação não substitui a chave do banco. Copiar somente o `.db` para outra conta ou computador não é um método de restauração. A conversão não criptografa cópias antigas, arquivos exportados anteriormente ou versões históricas mantidas por serviços externos.
+
+### Recuperação de senha e backup portátil
+
+Em **Segurança**, após desbloquear e confirmar a senha atual, o usuário pode gerar um código aleatório de recuperação. A interface mostra o código uma única vez e não o grava em arquivo nem o copia automaticamente. Somente o hash Argon2id com salt é persistido. Gerar outro invalida o anterior. Guarde o código fora do aplicativo.
+
+**Esqueci minha senha** aceita esse código e uma nova senha de 12 a 128 caracteres. A atualização da senha e o consumo do código ocorrem na mesma transação, sem apagar os estudos. A sessão permanece bloqueada e exige login com a nova senha. Após recuperar, gere outro código. Tentativas incorretas compartilham o limite de autenticação. Não existe senha mestra, envio por e-mail nem recuperação sem um código previamente configurado.
+
+**Backup** exporta somente `.lsbackup` protegido com AES-256-GCM, salt e nonce aleatórios, chave derivada por Argon2id (19.456 KiB, duas iterações, paralelismo 1). O envelope tem versão e parâmetros fixos; adulteração e senha incorreta são recusadas antes da importação. A senha do backup é independente da senha local e não é recuperável. O conteúdo é montado em memória, criptografado antes de qualquer gravação em disco e pode ser importado em outra instalação. Limites: 20 MiB de conteúdo interno e 32 MiB de envelope. Senhas, hashes, código de recuperação, segredos e filas externas não são exportados. JSON legado só é importado com autorização explícita; a validação e a mesclagem transacional existentes continuam sendo aplicadas.
+
+### Tela cheia e ferramentas de build
+
+A janela abre em tela cheia e o conteúdo utiliza a largura disponível. Há botão **Sair da tela cheia**, F11 para alternar e Esc para sair, preservando o fechamento de diálogos. Ao sair, a janela fica maximizada. O menu lateral possui rolagem independente para manter todas as páginas acessíveis em telas baixas.
+
+O build de SQLCipher/OpenSSL requer Strawberry Perl nativo. `scripts/native.cjs` encontra `C:\Strawberry\perl\bin\perl.exe` ou `.tools/perl/perl/bin/perl.exe`; também aceita `OPENSSL_SRC_PERL` para um caminho alternativo. O script de pré-requisitos verifica sua presença, inclusive no workflow Windows. Neste computador foi usado Strawberry Perl portátil 5.42.3.1, conferido por SHA-256 oficial, sem instalação global. Perl e as ferramentas C++ são necessários apenas no desenvolvimento.
+
+### Validação da atualização
+
+Os testes nativos cobrem arquivo ilegível sem chave correta, migração com preservação de dados, falha antes da substituição, chave ausente e exclusão de instâncias concorrentes. Recuperação cobre autenticação atual, invalidação do código anterior, uso único, preservação de tarefas e limite de tentativas. Backups cobrem ida e volta, aleatoriedade, senha incorreta, adulteração e exclusão de segredos. Os testes da interface cobrem confirmação da nova senha, exibição temporária do código e senha de backup; Playwright confere recuperação preservando tarefas, F11/Esc e largura de 1.920 pixels com IPC explicitamente simulado.
+
+Resultados locais: 73 testes Rust, 69 testes Vitest, 24 verificações Python/SQLite e 11 testes Playwright aprovados. `format:check`, `lint`, `typecheck`, `check:native-format`, `lint:native` e `build` passaram. `package:windows` gerou o instalador NSIS x64 0.3.0 com 4.461.820 bytes, SHA-256 `1DC6BB08D97ECB025692AB1DCB43221032F618A2515F0DB9A7F496FE260465EC`, sem assinatura Authenticode. A instalação local foi atualizada e aberta; o banco existente passou de cabeçalho SQLite legível para arquivo criptografado, e a interface instalada reconheceu a autenticação já configurada. Nenhuma senha pessoal foi digitada, redefinida ou recuperada pelo agente. Para ativar a recuperação, o próprio usuário precisa gerar e guardar o código após desbloquear. As verificações locais não equivalem ao resultado remoto do workflow GitHub.

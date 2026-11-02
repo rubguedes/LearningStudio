@@ -33,6 +33,9 @@ export async function mockDesktop(page: Page) {
       // substitui a suíte Rust nem comprova autenticação ou persistência SQLite.
       let configured = false;
       let unlocked = false;
+      let currentPassword = "uma frase longa segura";
+      let recoveryCode = "";
+      let fullscreen = true;
       let googleAuthorizing = false;
       const tutors: TutorSnapshot = {
         settings: {
@@ -93,14 +96,24 @@ export async function mockDesktop(page: Page) {
       windowWithTauri.isTauri = true;
       windowWithTauri.__TAURI_INTERNALS__ = {
         async invoke(command, args = {}) {
-          if (command === "auth_status") return { configured, unlocked };
+          if (command === "window_fullscreen") {
+            if (typeof args.enabled === "boolean") fullscreen = args.enabled;
+            return fullscreen;
+          }
+          if (command === "auth_status")
+            return {
+              configured,
+              unlocked,
+              encrypted: true,
+              recoveryConfigured: !!recoveryCode,
+            };
           if (command === "setup_password") {
             configured = true;
             unlocked = true;
             return { configured, unlocked };
           }
           if (command === "unlock") {
-            if (args.password !== "uma frase longa segura")
+            if (args.password !== currentPassword)
               throw { code: "INVALID_PASSWORD", message: "Senha incorreta." };
             unlocked = true;
             return { configured, unlocked };
@@ -109,7 +122,32 @@ export async function mockDesktop(page: Page) {
             unlocked = false;
             return;
           }
+          if (command === "recover_password") {
+            if (!recoveryCode || args.code !== recoveryCode)
+              throw {
+                code: "RECOVERY_INVALID",
+                message: "Código inválido ou já utilizado.",
+              };
+            currentPassword = String(args.password);
+            recoveryCode = "";
+            unlocked = false;
+            return {
+              configured: true,
+              unlocked: false,
+              encrypted: true,
+              recoveryConfigured: false,
+            };
+          }
           if (!unlocked) throw { code: "LOCKED", message: "Bloqueado" };
+          if (command === "generate_recovery_code") {
+            if (args.password !== currentPassword)
+              throw {
+                code: "INVALID_PASSWORD",
+                message: "Senha atual incorreta.",
+              };
+            recoveryCode = "LSR1-" + "A1B2C3D4-".repeat(7) + "A1B2C3D4";
+            return recoveryCode;
+          }
           if (command === "user_activity") return;
           if (command === "workspace_snapshot") return structuredClone(data);
           if (command === "tutor_snapshot") return structuredClone(tutors);

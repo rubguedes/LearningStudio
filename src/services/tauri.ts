@@ -49,6 +49,8 @@ export const tauriApi: StudyApi = {
   authStatus: () => command("auth_status"),
   setupPassword: (password) => command("setup_password", { password }),
   unlock: (password) => command("unlock", { password }),
+  recoverPassword: (code, password) =>
+    command("recover_password", { code, password }),
   lock: () => command("lock"),
   userActivity: () => command("user_activity"),
   snapshot: () => command("workspace_snapshot"),

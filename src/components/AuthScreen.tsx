@@ -1,25 +1,38 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, BookOpen, LockKeyhole, ShieldCheck } from "lucide-react";
 import { passwordError } from "../domain/rules";
+import { WindowControls } from "./WindowControls";
 
 interface Props {
   configured: boolean;
   busy: boolean;
   error: string;
   onSubmit(password: string): Promise<void>;
+  onRecover?(code: string, password: string): Promise<boolean>;
 }
 
-export function AuthScreen({ configured, busy, error, onSubmit }: Props) {
+export function AuthScreen({
+  configured,
+  busy,
+  error,
+  onSubmit,
+  onRecover,
+}: Props) {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [localError, setLocalError] = useState("");
+  const [recovering, setRecovering] = useState(false),
+    [code, setCode] = useState(""),
+    [notice, setNotice] = useState("");
   async function submit(event: FormEvent) {
     event.preventDefault();
-    const issue = configured
-      ? !password
-        ? "Digite sua senha."
-        : null
-      : passwordError(password, confirmation);
+    const issue = recovering
+      ? passwordError(password, confirmation)
+      : configured
+        ? !password
+          ? "Digite sua senha."
+          : null
+        : passwordError(password, confirmation);
     if (issue) {
       setLocalError(issue);
       return;
@@ -28,7 +41,16 @@ export function AuthScreen({ configured, busy, error, onSubmit }: Props) {
     const value = password;
     setPassword("");
     setConfirmation("");
-    await onSubmit(value);
+    if (recovering && onRecover) {
+      const submitted = code;
+      setCode("");
+      if (await onRecover(submitted, value)) {
+        setRecovering(false);
+        setNotice(
+          "Senha redefinida. Entre com a nova senha e gere outro código em Segurança.",
+        );
+      }
+    } else await onSubmit(value);
   }
   return (
     <main className="auth-shell">
@@ -61,6 +83,7 @@ export function AuthScreen({ configured, busy, error, onSubmit }: Props) {
         </span>
       </section>
       <section className="auth-form-wrap">
+        <WindowControls />
         <div className="auth-form">
           <span className="round-icon">
             <LockKeyhole size={24} />
@@ -69,25 +92,48 @@ export function AuthScreen({ configured, busy, error, onSubmit }: Props) {
             {configured ? "BOM TER VOCÊ DE VOLTA" : "VAMOS COMEÇAR"}
           </span>
           <h2>
-            {configured ? "Seu espaço está protegido" : "Crie sua senha local"}
+            {recovering
+              ? "Recuperar acesso"
+              : configured
+                ? "Seu espaço está protegido"
+                : "Crie sua senha local"}
           </h2>
           <p>
-            {configured
-              ? "Digite sua senha para continuar seus estudos."
-              : "Escolha uma frase longa e fácil de lembrar. Ela será pedida ao abrir o aplicativo."}
+            {recovering
+              ? "Use o código gerado anteriormente em Segurança. Sem ele, não há redefinição automática. O cofre da conta Windows também precisa estar disponível."
+              : configured
+                ? "Digite sua senha para continuar seus estudos."
+                : "Escolha uma frase longa e fácil de lembrar. Ela será pedida ao abrir o aplicativo."}
           </p>
           <form
             onSubmit={(event) => {
               void submit(event);
             }}
           >
+            {recovering && (
+              <>
+                <label htmlFor="recovery-code">Código de recuperação</label>
+                <input
+                  id="recovery-code"
+                  type="password"
+                  autoComplete="off"
+                  required
+                  maxLength={200}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  disabled={busy}
+                />
+              </>
+            )}
             <label htmlFor="password">
-              {configured ? "Senha" : "Nova senha"}
+              {recovering || !configured ? "Nova senha" : "Senha"}
             </label>
             <input
               id="password"
               type="password"
-              autoComplete={configured ? "current-password" : "new-password"}
+              autoComplete={
+                configured && !recovering ? "current-password" : "new-password"
+              }
               autoFocus
               value={password}
               maxLength={256}
@@ -96,7 +142,7 @@ export function AuthScreen({ configured, busy, error, onSubmit }: Props) {
               aria-describedby="auth-help"
               required
             />
-            {!configured && (
+            {(!configured || recovering) && (
               <>
                 <label htmlFor="confirmation">Confirmar senha</label>
                 <input
@@ -123,22 +169,43 @@ export function AuthScreen({ configured, busy, error, onSubmit }: Props) {
             >
               {busy
                 ? "Verificando…"
-                : configured
-                  ? "Desbloquear"
-                  : "Criar meu espaço"}
+                : recovering
+                  ? "Redefinir senha"
+                  : configured
+                    ? "Desbloquear"
+                    : "Criar meu espaço"}
               <ArrowRight size={18} />
             </button>
           </form>
+          {configured && onRecover && (
+            <button
+              type="button"
+              className="text-button"
+              disabled={busy}
+              onClick={() => {
+                setRecovering(!recovering);
+                setPassword("");
+                setConfirmation("");
+                setCode("");
+                setLocalError("");
+                setNotice("");
+              }}
+            >
+              {recovering ? "Voltar para entrar" : "Esqueci minha senha"}
+            </button>
+          )}
+          {notice && <p role="status">{notice}</p>}
           <p id="auth-help" className="fine-print">
             {configured
               ? "Bloqueio automático após 15 minutos de inatividade."
-              : "Mínimo de 12 caracteres. Não há recuperação de senha nesta versão; guarde-a em um local seguro."}
+              : "Mínimo de 12 caracteres. Depois de entrar, gere seu código de recuperação em Segurança."}
           </p>
           <div className="privacy-note">
             <ShieldCheck size={17} />
             <span>
-              A senha protege o acesso pelo aplicativo. O banco local ainda não
-              é criptografado; proteja sua conta do Windows e o disco.
+              Banco protegido com SQLCipher e chave no cofre do Windows. Guarde
+              um backup portátil protegido por senha para recuperar seus dados
+              em outro computador.
             </span>
           </div>
         </div>
